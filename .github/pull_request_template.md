@@ -18,11 +18,19 @@ Closes #
 - Required consumer migration:
 - Local overrides preserved:
 
-## Validation
+## Automated validation
 
 - Commands and checks:
 - Valid and invalid fixtures:
 - CI run:
+
+## Human acceptance test
+
+- Required:
+- Goal or milestone tested:
+- Realistic workflow exercised:
+- Result: pending / confirmed / defect found / goal changed
+- Human approval recorded:
 
 ## Rollback
 
@@ -30,5 +38,6 @@ Closes #
 
 ## Risk and approval
 
+- Change class:
 - Human review required:
 - Remaining decision:
