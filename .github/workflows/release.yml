@@ -1,0 +1,78 @@
+name: Publish Platform Release
+
+on:
+  workflow_run:
+    workflows: [Platform CI]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-platform-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Publish verified platform release
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out verified main commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'main' }}
+          fetch-depth: 0
+
+      - name: Validate release metadata
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "VERSION is not a semantic version: $version" >&2
+            exit 1
+          fi
+
+          tag="v${version}"
+          notes="docs/releases/${tag}.md"
+          test -f "$notes"
+          grep -Fq "Expected release tag:** \`${tag}\`" README.md
+          grep -Fq "## [${version}]" CHANGELOG.md
+          grep -Fq "# Engineering Platform ${tag}" "$notes"
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "notes=$notes" >> "$GITHUB_OUTPUT"
+          echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create release if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.metadata.outputs.tag }}
+          NOTES: ${{ steps.metadata.outputs.notes }}
+          RELEASE_SHA: ${{ steps.metadata.outputs.release_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            git fetch --tags --force
+            tag_sha="$(git rev-list -n 1 "$TAG")"
+            if ! git merge-base --is-ancestor "$tag_sha" origin/main; then
+              echo "Existing release $TAG is not reachable from main" >&2
+              exit 1
+            fi
+            echo "Release $TAG already exists at $tag_sha"
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --target "$RELEASE_SHA" \
+            --title "Engineering Platform $TAG" \
+            --notes-file "$NOTES"
