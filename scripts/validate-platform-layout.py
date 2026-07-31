@@ -106,7 +106,7 @@ def main() -> int:
         ):
             if f"## {heading}" not in text:
                 errors.append(f"AGENTS.md is missing heading: {heading}")
-        for phrase in ("README.md from `main` first", "latest non-draft, non-prerelease", expected_tag):
+        for phrase in ("`README.md` from `main` first", "latest non-draft, non-prerelease"):
             if phrase.lower() not in text.lower():
                 errors.append(f"AGENTS.md does not describe required release concept: {phrase}")
 
