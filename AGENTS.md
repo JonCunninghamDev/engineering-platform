@@ -8,7 +8,8 @@ This repository defines shared engineering behavior used by other repositories. 
 - `main` is the released platform source of truth.
 - `develop` is the integration branch.
 - Issues are the canonical backlog; pull requests are the canonical implementation and review record.
-- Read this file, `README.md`, and `docs/task-management.md` at the beginning of every run.
+- `VERSION` declares the expected platform release.
+- Read `README.md` first, then this file and `docs/task-management.md` at the beginning of every run.
 - Read `docs/adoption.md` for changes affecting consumer repositories.
 
 ## Instruction precedence
@@ -30,11 +31,17 @@ At the beginning of every run:
 
 1. Verify repository access with a real GitHub connector call.
 2. Confirm the default branch is `main`.
-3. Read required steering from `main`.
-4. Inspect open issues, pull requests, CI, reviews, comments, and unresolved threads.
-5. Verify partially completed writes before repeating them.
-6. Compare `main` and `develop`; synchronize approved release history back into `develop` before ordinary work.
-7. Continue the lowest-numbered `IN PROGRESS` issue, otherwise the highest-priority eligible `READY` issue.
+3. Read `README.md` from `main` first.
+4. Read `VERSION` and form the expected release tag as `v<VERSION>`.
+5. Query the latest non-draft, non-prerelease GitHub release and verify that its tag matches the expected tag and its tagged commit is reachable from `main`.
+6. State the verified release tag and commit before treating this repository as published shared steering.
+7. Read this file, `docs/task-management.md`, and other required steering from `main`.
+8. Inspect open issues, pull requests, CI, reviews, comments, and unresolved threads.
+9. Verify partially completed writes before repeating them.
+10. Compare `main` and `develop`; synchronize approved release history back into `develop` before ordinary work.
+11. Continue the lowest-numbered `IN PROGRESS` issue, otherwise the highest-priority eligible `READY` issue.
+
+If release verification fails, do not claim the current files are a published steering release. Report the exact mismatch and inspect the release workflow, branch state, open pull requests, and issue state. Branch-local steering may guide maintenance on that branch, but it is not consumer-authoritative until released.
 
 Do not claim GitHub is unavailable without an actual failed connector call and the exact error.
 
@@ -82,9 +89,11 @@ Human acceptance testing complements deterministic automated tests. It does not 
 
 - Prefer additive, backward-compatible changes.
 - Version contracts, schemas, profiles, and reusable workflow interfaces.
+- `VERSION`, the README declaration, changelog entry, release notes, and GitHub release tag must agree.
+- A platform version is published only when a non-draft, non-prerelease `v<VERSION>` release exists and its tagged commit is reachable from `main`.
 - Document deprecations before removal.
 - Never require consumers to fetch this repository during every agent startup.
-- Consumer updates occur through pinned versions and tested pull requests.
+- Consumer updates occur through pinned, verified releases and tested pull requests.
 - Keep product-specific rules in consumers; central standards may define extension points but must not silently override local product truth.
 
 ## Validation
@@ -94,6 +103,7 @@ Before review:
 - run repository layout validation;
 - validate shell, Python, JSON, and YAML files;
 - test every executable policy with valid and invalid fixtures;
+- verify version, changelog, release-note, and release-workflow consistency;
 - update adoption and compatibility documentation when consumer behavior changes;
 - identify affected consumer repositories and rollback guidance;
 - state whether human acceptance testing is required and record its result when complete.
@@ -107,7 +117,7 @@ Before marking work blocked:
 1. Re-read the exact error and verify GitHub state.
 2. Retry transient operations up to two times.
 3. Inspect CI jobs, steps, and logs.
-4. Inspect branch comparison, changed files, reviews, and comments.
+4. Inspect branch comparison, changed files, reviews, comments, release state, and tags.
 5. Run the narrowest deterministic reproduction.
 6. Distinguish repository defects from permissions, service failures, and missing external capabilities.
 7. Use a safe GitHub-native alternative when one connector operation is unsupported.
@@ -125,4 +135,4 @@ An issue is ready for review when:
 - the PR is focused and references the issue;
 - the exact human decision is stated.
 
-An issue is complete when any required human acceptance test and approval have also been recorded, the change has reached its intended branch, and dependent issue states have been updated.
+An issue is complete when any required human acceptance test and approval have also been recorded, the change has reached its intended branch, the expected release exists when publication is in scope, and dependent issue states have been updated.
