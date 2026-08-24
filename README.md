@@ -26,10 +26,26 @@ When an agent is pointed at this repository, it must:
 3. Read `VERSION`, then form the expected release tag as `v<VERSION>`.
 4. Query the latest non-draft, non-prerelease GitHub release.
 5. Verify that the release tag exactly matches the expected tag and that its tagged commit is reachable from `main`.
-6. Read `AGENTS.md`, `docs/task-management.md`, and any other files required for the active task.
+6. Read `AGENTS.md`, `agent/operating-contract-v1.md`, `docs/task-management.md`, and any other files required for the active task.
 7. State the verified release tag and commit before treating this repository as published shared steering.
 
 If the release is absent, mismatched, draft, prerelease, or not reachable from `main`, the agent must not represent the current files as published shared steering. It should report the mismatch and inspect the release workflow, open pull requests, and issue state. Branch-local files may still guide maintenance work on that branch, but they are not an approved consumer release.
+
+## How agents work
+
+The reusable operating contract is `agent/operating-contract-v1.md`.
+
+It defines the default behavior for ordinary, interrupted, and recurring autonomous work:
+
+- reconstruct state from GitHub rather than conversational memory;
+- select work deterministically from existing pull requests and issues;
+- make bounded, reversible, testable engineering decisions without unnecessary human questions;
+- validate changes and inspect CI rather than assuming a write succeeded;
+- leave durable resumable state after every run;
+- merge only when repository policy explicitly allows autonomous merge;
+- stop at explicit human gates such as governance changes, credentials, privacy/security changes, destructive migrations, consequential releases, or ambiguous cross-repository risk.
+
+Consumer repositories can narrow these rules through explicit local steering and policy, but should not silently broaden agent authority.
 
 ## What belongs here
 
@@ -37,6 +53,7 @@ Centralize mechanics that should behave consistently across repositories:
 
 - startup and interrupted-run recovery;
 - task states and deterministic selection;
+- autonomous and recurring agent execution;
 - feature, integration, promotion, synchronization, and hotfix routes;
 - CI failure ownership and troubleshooting;
 - reusable toolchain setup and caching;
@@ -100,7 +117,7 @@ Released foundation:
 
 Next:
 
-1. Centralize delivery-route policy and steering scenarios.
+1. Centralize delivery-route policy, autonomous operating behavior, and steering scenarios.
 2. Define `engineering-policy/v1` and initial profiles.
 3. Add the reusable `node-python-blender` CI workflow.
 4. Migrate `JCDevBot/low-poly-character-studio` as the first consumer.
