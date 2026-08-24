@@ -9,7 +9,7 @@ This repository defines shared engineering behavior used by other repositories. 
 - `develop` is the integration branch.
 - Issues are the canonical backlog; pull requests are the canonical implementation and review record.
 - `VERSION` declares the expected platform release.
-- Read `README.md` first, then this file and `docs/task-management.md` at the beginning of every run.
+- Read `README.md` first, then this file, `agent/operating-contract-v1.md`, and `docs/task-management.md` at the beginning of every run.
 - Read `docs/adoption.md` for changes affecting consumer repositories.
 
 ## Instruction precedence
@@ -35,7 +35,7 @@ At the beginning of every run:
 4. Read `VERSION` and form the expected release tag as `v<VERSION>`.
 5. Query the latest non-draft, non-prerelease GitHub release and verify that its tag matches the expected tag and its tagged commit is reachable from `main`.
 6. State the verified release tag and commit before treating this repository as published shared steering.
-7. Read this file, `docs/task-management.md`, and other required steering from `main`.
+7. Read this file, `agent/operating-contract-v1.md`, `docs/task-management.md`, and other required steering from `main`.
 8. Inspect open issues, pull requests, CI, reviews, comments, and unresolved threads.
 9. Verify partially completed writes before repeating them.
 10. Compare `main` and `develop`; synchronize approved release history back into `develop` before ordinary work.
@@ -57,7 +57,9 @@ Do not claim GitHub is unavailable without an actual failed connector call and t
 
 ## Implementation authority
 
-The agent owns bounded implementation, tests, documentation, CI troubleshooting, safe conflict resolution, and evidence preparation inside an approved issue.
+The agent owns bounded implementation, tests, documentation, CI troubleshooting, safe conflict resolution, evidence preparation, interrupted-run recovery, and recurring autonomous execution inside an approved issue. `agent/operating-contract-v1.md` defines the shared decision boundary and recurring-run behavior.
+
+The default rule is: make reversible, local, testable engineering decisions and proceed; stop only at an explicit human gate or after safe recovery is exhausted.
 
 Green, low-risk pull requests into `develop` may merge autonomously when the repository policy explicitly classifies the change as low risk and no human gate applies.
 
