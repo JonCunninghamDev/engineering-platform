@@ -1,6 +1,6 @@
 # Engineering Platform
 
-Shared engineering infrastructure for JCDevBot repositories.
+Shared engineering infrastructure for JonCunninghamDev repositories.
 
 **Declared platform version:** `0.1.0`  
 **Expected release tag:** `v0.1.0`
@@ -103,4 +103,4 @@ Next:
 1. Centralize delivery-route policy and steering scenarios.
 2. Define `engineering-policy/v1` and initial profiles.
 3. Add the reusable `node-python-blender` CI workflow.
-4. Migrate `JCDevBot/low-poly-character-studio` as the first consumer.
+4. Migrate `JonCunninghamDev/low-poly-character-studio` as the first consumer.
