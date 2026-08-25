@@ -40,7 +40,7 @@ Until that schema is released, use a minimal file such as:
 
 ```yaml
 platform:
-  repository: JCDevBot/engineering-platform
+  repository: JonCunninghamDev/engineering-platform
   version: v0.1.0
   commit: <full-release-commit-sha>
 profile: node-python-blender
@@ -92,7 +92,7 @@ Reusable workflow failures should identify the pinned platform release and expos
 
 ## First consumer
 
-`JCDevBot/low-poly-character-studio` will be the first consumer after:
+`JonCunninghamDev/low-poly-character-studio` will be the first consumer after:
 
 - the shared steering baseline is released and verified;
 - shared delivery policy and `engineering-policy/v1` are released;
