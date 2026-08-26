@@ -1,6 +1,6 @@
 # Engineering Platform
 
-Shared engineering infrastructure for JCDevBot repositories.
+Shared engineering infrastructure for JonCunninghamDev repositories.
 
 **Declared platform version:** `0.1.0`  
 **Expected release tag:** `v0.1.0`
@@ -33,9 +33,9 @@ If the release is absent, mismatched, draft, prerelease, or not reachable from `
 
 ## How agents work
 
-The reusable operating contract is `agent/operating-contract-v1.md`.
+The reusable operating contract is `agent/operating-contract-v1.md`. The concrete decision examples are `agent/steering-scenarios-v1.md` and its executable fixture mirror under `tests/fixtures/`.
 
-It defines the default behavior for ordinary, interrupted, and recurring autonomous work:
+The contract defines the default behavior for ordinary, interrupted, and recurring autonomous work:
 
 - reconstruct state from GitHub rather than conversational memory;
 - select work deterministically from existing pull requests and issues;
@@ -84,17 +84,23 @@ A consumer repository:
 
 Consumers remain independently buildable and revertible. A platform outage must not prevent an agent from reading local repository steering or running local tests.
 
+## Delivery routing
+
+`docs/delivery-routing.md` defines shared feature, promotion, synchronization, and hotfix semantics. `scripts/validate-delivery-route.py` provides a reusable validator with configurable default and integration branch names. The deterministic valid/invalid matrix is `tests/fixtures/delivery-routes.json`.
+
+Ordinary work targets the integration branch. Promotion to the released branch uses `Release:`, release-history synchronization back to integration uses `Sync:`, and a dedicated released-branch hotfix uses `Hotfix:`. Invalid direct-main and ambiguous routes fail with actionable errors.
+
 ## Repository layout
 
 ```text
-agent/       shared operating contracts
+agent/       shared operating contracts and steering scenarios
 standards/   Git, testing, security, delivery, and observability standards
 schemas/     versioned machine-readable policy schemas
 profiles/    language and toolchain profiles
 templates/   consumer repository and workflow templates
 actions/     reusable composite or JavaScript actions
 .github/     reusable and repository-local workflows
-docs/        adoption, task management, release, and governance documentation
+docs/        adoption, task management, release, routing, and governance documentation
 tests/       policy and steering scenario fixtures
 scripts/     platform validation and maintenance commands
 ```
@@ -104,7 +110,9 @@ scripts/     platform validation and maintenance commands
 - `main` is the released platform source of truth.
 - `develop` is the integration branch.
 - Ordinary issue branches use `agent/issue-<number>-<slug>` and target `develop`.
-- Platform releases are promoted from `develop` to `main` after green CI and human approval.
+- Platform releases are promoted from `develop` to `main` after green CI and human approval using an explicit `Release:` route.
+- Approved release history is synchronized from `main` back into `develop` using an explicit `Sync:` route.
+- Hotfixes use a dedicated branch targeting `main`, an explicit `Hotfix:` title, human approval before merge, and subsequent reconciliation into `develop`.
 - After Platform CI succeeds on `main`, the release workflow publishes the `v<VERSION>` GitHub release if it does not already exist.
 - Consumers pin the verified release tag and full release commit rather than an unversioned branch.
 
@@ -120,4 +128,4 @@ Next:
 1. Centralize delivery-route policy, autonomous operating behavior, and steering scenarios.
 2. Define `engineering-policy/v1` and initial profiles.
 3. Add the reusable `node-python-blender` CI workflow.
-4. Migrate `JCDevBot/low-poly-character-studio` as the first consumer.
+4. Migrate `JonCunninghamDev/low-poly-character-studio` as the first consumer.
