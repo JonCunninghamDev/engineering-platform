@@ -1,0 +1,14 @@
+[
+  {"name":"feature-to-integration","base":"develop","head":"agent/issue-42-example","title":"Issue #42: implement example","valid":true,"route":"feature"},
+  {"name":"defect-to-integration","base":"develop","head":"agent/issue-43-fix","title":"Fix deterministic defect","valid":true,"route":"feature"},
+  {"name":"promotion-to-main","base":"main","head":"develop","title":"Release: engineering platform v0.2.0","valid":true,"route":"promotion"},
+  {"name":"release-sync-back-to-integration","base":"develop","head":"main","title":"Sync: release v0.2.0 back into develop","valid":true,"route":"synchronization"},
+  {"name":"hotfix-to-main","base":"main","head":"hotfix/release-validator","title":"Hotfix: repair release validation","valid":true,"route":"hotfix"},
+  {"name":"custom-branch-names","base":"trunk","head":"integration","title":"Release: custom consumer promotion","default_branch":"trunk","integration_branch":"integration","valid":true,"route":"promotion"},
+  {"name":"reject-feature-direct-to-main","base":"main","head":"agent/issue-44-example","title":"Issue #44: ordinary work","valid":false,"error_contains":"direct-main route rejected"},
+  {"name":"reject-promotion-without-release-title","base":"main","head":"develop","title":"Promote develop","valid":false,"error_contains":"must start with 'Release:'"},
+  {"name":"reject-sync-without-sync-title","base":"develop","head":"main","title":"Merge main back","valid":false,"error_contains":"must start with 'Sync:'"},
+  {"name":"reject-hotfix-prefix-on-feature-route","base":"develop","head":"agent/issue-45-example","title":"Hotfix: not actually a main hotfix","valid":false,"error_contains":"reserved 'Hotfix:'"},
+  {"name":"reject-ambiguous-identical-branches","base":"develop","head":"develop","title":"Issue #46: ambiguous","valid":false,"error_contains":"identical"},
+  {"name":"reject-unsupported-base","base":"staging","head":"agent/issue-47-example","title":"Issue #47: wrong target","valid":false,"error_contains":"unsupported base branch"}
+]

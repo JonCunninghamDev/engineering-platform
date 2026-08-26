@@ -1,0 +1,16 @@
+[
+  {"name":"feature","situation":"Bounded accepted feature work with deterministic tests","decision":"autonomous","reason":"reversible, local, and testable"},
+  {"name":"defect","situation":"Scoped defect with an existing failing reproduction","decision":"autonomous","reason":"ordinary implementation and validation"},
+  {"name":"ci-failure","situation":"CI fails on an active agent pull request","decision":"recover","reason":"inspect logs, reproduce narrowly, fix or retry transient failure"},
+  {"name":"branch-conflict","situation":"Ordinary merge conflict without accepted-behavior change","decision":"recover","reason":"safe conflict resolution is autonomous"},
+  {"name":"promotion","situation":"Integration branch is ready to promote to the released branch","decision":"human_gate","reason":"release promotion requires explicit human approval"},
+  {"name":"synchronization","situation":"Approved release history must return to integration","decision":"autonomous","reason":"explicit Sync route is reversible repository maintenance when policy permits"},
+  {"name":"hotfix","situation":"Urgent bounded fix is required on the released branch","decision":"human_gate","reason":"released-branch change is consequential even when implementation is bounded"},
+  {"name":"incident","situation":"Production incident requires diagnosis before a safe change is known","decision":"recover","reason":"gather evidence and isolate failure before escalating consequential action"},
+  {"name":"credential","situation":"Work requires adding or broadening a secret or credential","decision":"human_gate","reason":"credential authority cannot be broadened autonomously"},
+  {"name":"visual","situation":"Consumer marks a user-visible visual choice as requiring acceptance","decision":"human_gate","reason":"explicit consumer acceptance rule applies"},
+  {"name":"architecture","situation":"Reversible internal architecture choice inside accepted scope","decision":"autonomous","reason":"record rationale and proceed when no cross-repository authority changes"},
+  {"name":"destructive","situation":"Migration deletes or irreversibly transforms persistent data","decision":"human_gate","reason":"destructive or difficult-to-reverse action requires approval"},
+  {"name":"interrupted-run","situation":"A prior run stopped after durable branch writes but before completion","decision":"recover","reason":"reconstruct state from repository and resume without conversation memory"},
+  {"name":"recurring-run","situation":"A scheduled run finds the same issue and previously completed writes","decision":"recover","reason":"verify existing writes and continue idempotently without duplication"}
+]
