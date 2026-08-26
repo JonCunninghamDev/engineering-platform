@@ -30,8 +30,11 @@ jobs:
       - name: Validate repository layout
         run: python scripts/validate-platform-layout.py
 
+      - name: Test platform validators
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
       - name: Compile Python sources
-        run: python -m compileall -q scripts
+        run: python -m compileall -q scripts tests
 
       - name: Validate shell syntax
         run: find scripts actions tests -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
