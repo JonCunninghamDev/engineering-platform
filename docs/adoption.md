@@ -43,10 +43,14 @@ platform:
   repository: JonCunninghamDev/engineering-platform
   version: v0.1.0
   commit: <full-release-commit-sha>
+  operating_contract: agent/operating-contract-v1.md
+  delivery_route_validator: scripts/validate-delivery-route.py
 profile: node-python-blender
 ```
 
 Reusable workflows should be invoked by a verified release tag or full commit SHA. Production-critical consumers should prefer full SHA pinning and upgrade through a pull request.
+
+A contract filename such as `operating-contract-v1.md` is the contract interface version, not proof that a candidate branch is released. Consumer authority comes from the verified platform release tag plus immutable commit. Additive changes can remain within a compatible contract interface only when they do not broaden authority or break consumer expectations; incompatible contract behavior requires a new contract interface version and release notes.
 
 ## Local synchronized steering
 
@@ -54,7 +58,8 @@ A consumer keeps:
 
 - a concise `AGENTS.md` describing repository authority, required local reads, product-specific human gates, and exceptions;
 - a checked-in synchronized base contract when the agent environment cannot reliably compose remote instructions;
-- the verified platform release tag and commit from which that local contract was derived.
+- the verified platform release tag and commit from which that local contract was derived;
+- any locally copied route validator or scenario fixture tied to the same pinned release.
 
 Agents should not fetch the platform repository during every run merely to reconstruct ordinary task context. Release verification is required during initial adoption and upgrade, not as a runtime dependency for every ordinary consumer task.
 
@@ -62,8 +67,8 @@ Agents should not fetch the platform repository during every run merely to recon
 
 1. A verified platform release becomes available.
 2. Automation or an agent opens a consumer upgrade PR.
-3. The PR updates the tag, immutable commit, and synchronized local files.
-4. Consumer CI validates its complete required suite.
+3. The PR updates the tag, immutable commit, synchronized local files, and any copied validator/fixtures.
+4. Consumer CI validates its complete required suite, including local route scenarios when adopted.
 5. Review confirms product-specific exceptions remain intact.
 6. Human acceptance is performed when the change affects consequential consumer behavior.
 7. Merge only after rollback is clear.
@@ -77,7 +82,7 @@ Overrides are explicit, narrow, and documented with rationale. Examples include:
 - a regulated security or data-handling requirement;
 - a different integration branch during a temporary migration.
 
-Overrides must not be hidden in workflow implementation. They belong in the consumer policy and local steering.
+Overrides must not be hidden in workflow implementation. They belong in the consumer policy and local steering. Consumers may narrow autonomous authority but must not silently broaden the shared contract.
 
 ## Failure isolation
 

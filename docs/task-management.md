@@ -2,7 +2,7 @@
 
 ## Source of truth
 
-GitHub Issues define platform work. Pull requests define implementation and review. `AGENTS.md` defines execution authority.
+GitHub Issues define platform work. Pull requests define implementation and review. `AGENTS.md` defines repository execution authority. `agent/operating-contract-v1.md` defines the reusable autonomous and recurring-run behavior.
 
 ## Issue format
 
@@ -37,6 +37,23 @@ Each issue includes outcome, scope, acceptance criteria, dependencies, and imple
 5. Break ties by issue number.
 6. Maintain at most two active implementation branches.
 7. Start a second issue only while the first waits exclusively on CI, human acceptance testing, review, or another non-interactive state and the work is independent.
+
+## Recurring autonomous runs
+
+Scheduled or repeatedly invoked agents use the same task queue; they do not maintain a separate automation backlog.
+
+At each recurring run:
+
+1. Reconstruct state from GitHub and checked-in steering.
+2. Inspect active pull requests and CI before selecting new work.
+3. Resume the deterministically selected `IN PROGRESS` issue when one exists.
+4. Verify whether the previous run's intended writes already landed before repeating them.
+5. Make the largest bounded increment that can be tested and safely handed off.
+6. Push durable progress to the issue branch and record non-obvious next-state information in the issue or pull request.
+7. If CI is the only waiting state, perform one independent non-overlapping task only when the two-branch rule permits it.
+8. Stop without human notification when no decision is required; request a human only at an explicit gate or true blocker.
+
+Recurring execution must be idempotent at the workflow level. Re-running startup and recovery must not create duplicate branches, pull requests, comments, releases, or destructive actions.
 
 ## Goal validation
 
