@@ -6,17 +6,20 @@ Tests should cover both accepted and rejected behavior. A prose rule is incomple
 
 ## Current suites
 
-- `test_validate_platform_layout.py` exercises the platform layout and release-metadata validator against temporary valid and invalid repository fixtures.
+- `test_validate_platform_layout.py` exercises the platform layout, CI-policy wiring, and release-metadata validator against temporary valid and invalid repository fixtures.
 - `test_validate_delivery_route.py` executes the reusable feature, promotion, synchronization, hotfix, direct-main rejection, and ambiguity matrix in `fixtures/delivery-routes.json`.
+- `test_validate_pr_policy.py` verifies that repository PR routes are valid and that feature/defect and hotfix work includes new or updated automated tests.
 - `test_agent_steering_scenarios.py` verifies the required autonomous, recovery, and human-gate decisions in `fixtures/agent-steering-scenarios-v1.json`.
 
-Run the Python test suite with:
+Run the full Python test suite with:
 
 ```bash
 python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
-CI also compiles `scripts` and `tests`, validates shell syntax, and parses every JSON and YAML file.
+For implementation branches, add or update the relevant automated tests with the change and run the full suite before committing. Platform CI reruns the same suite for pull requests into `develop` and `main`.
+
+CI also validates pull-request route/test evidence, compiles `scripts` and `tests`, validates shell syntax, and parses every JSON and YAML file.
 
 ## Later suites
 

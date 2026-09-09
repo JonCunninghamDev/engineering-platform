@@ -23,6 +23,7 @@ REQUIRED_FILES = {
     "templates/README.md",
     "actions/README.md",
     "tests/README.md",
+    "scripts/validate-pr-policy.py",
     ".github/pull_request_template.md",
     ".github/workflows/ci.yml",
     ".github/workflows/release.yml",
@@ -127,6 +128,14 @@ def validate(root: Path) -> list[str]:
             errors.append(f"missing release notes: docs/releases/v{version}.md")
         elif f"# Engineering Platform v{version}" not in release_notes.read_text(encoding="utf-8"):
             errors.append(f"release notes heading does not match VERSION: v{version}")
+
+    ci_workflow = root / ".github" / "workflows" / "ci.yml"
+    require_phrases(
+        root,
+        ci_workflow,
+        ("fetch-depth: 0", "validate-pr-policy.py", "unittest discover"),
+        errors,
+    )
 
     release_workflow = root / ".github" / "workflows" / "release.yml"
     require_phrases(

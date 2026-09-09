@@ -86,9 +86,24 @@ Consumers remain independently buildable and revertible. A platform outage must 
 
 ## Delivery routing
 
-`docs/delivery-routing.md` defines shared feature, promotion, synchronization, and hotfix semantics. `scripts/validate-delivery-route.py` provides a reusable validator with configurable default and integration branch names. The deterministic valid/invalid matrix is `tests/fixtures/delivery-routes.json`.
+`docs/delivery-routing.md` defines shared feature, promotion, synchronization, and hotfix semantics. `scripts/validate-delivery-route.py` provides a reusable validator with configurable default and integration branch names. `scripts/validate-pr-policy.py` adds this repository's test-evidence requirement. The deterministic valid/invalid route matrix is `tests/fixtures/delivery-routes.json`.
 
 Ordinary work targets the integration branch. Promotion to the released branch uses `Release:`, release-history synchronization back to integration uses `Sync:`, and a dedicated released-branch hotfix uses `Hotfix:`. Invalid direct-main and ambiguous routes fail with actionable errors.
+
+## Development workflow
+
+The repository follows a production/integration model:
+
+1. `main` is released/production state.
+2. `develop` is integration and must contain all current `main` history before ordinary work starts.
+3. Create each feature or defect branch from current `develop`.
+4. Add or update automated tests under `tests/` for the changed behavior.
+5. Implement the change and run the full suite before commit: `python -m unittest discover -s tests -p 'test_*.py' -v`.
+6. Open the feature/defect PR into `develop`; Platform CI validates the route, test evidence, repository structure, and full suite.
+7. Promote `develop` to `main` only through a `Release:` PR after green CI and required human approval.
+8. Synchronize `main` back into `develop` with a `Sync:` route when release history would otherwise leave integration behind.
+
+Branch protection or repository rulesets should require pull requests and the stable `Validate engineering platform` check on both shared branches so ordinary direct pushes cannot bypass CI.
 
 ## Repository layout
 
@@ -107,12 +122,12 @@ scripts/     platform validation and maintenance commands
 
 ## Branches and releases
 
-- `main` is the released platform source of truth.
-- `develop` is the integration branch.
-- Ordinary issue branches use `agent/issue-<number>-<slug>` and target `develop`.
+- `main` is the released platform source of truth and production-equivalent branch.
+- `develop` is the integration branch and should never be behind `main` when ordinary work begins.
+- Ordinary issue branches use `agent/issue-<number>-<slug>`, start from `develop`, include test changes, and target `develop`.
 - Platform releases are promoted from `develop` to `main` after green CI and human approval using an explicit `Release:` route.
 - Approved release history is synchronized from `main` back into `develop` using an explicit `Sync:` route.
-- Hotfixes use a dedicated branch targeting `main`, an explicit `Hotfix:` title, human approval before merge, and subsequent reconciliation into `develop`.
+- Hotfixes use a dedicated branch from `main`, target `main`, include automated tests, use an explicit `Hotfix:` title, require human approval before merge, and are subsequently reconciled into `develop`.
 - After Platform CI succeeds on `main`, the release workflow publishes the `v<VERSION>` GitHub release if it does not already exist.
 - Consumers pin the verified release tag and full release commit rather than an unversioned branch.
 
