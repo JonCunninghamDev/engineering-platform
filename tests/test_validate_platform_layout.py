@@ -72,6 +72,10 @@ class PlatformLayoutValidatorTests(unittest.TestCase):
         self._write("CHANGELOG.md", "# Changelog\n\n## [0.1.0]\n")
         self._write("docs/releases/v0.1.0.md", "# Engineering Platform v0.1.0\n")
         self._write(
+            ".github/workflows/ci.yml",
+            "fetch-depth: 0\nvalidate-pr-policy.py\nunittest discover\n",
+        )
+        self._write(
             ".github/workflows/release.yml",
             "workflow_run\nPlatform CI\ncontents: write\ngh release create\n",
         )
@@ -116,6 +120,15 @@ class PlatformLayoutValidatorTests(unittest.TestCase):
     def test_release_notes_heading_mismatch_is_reported(self) -> None:
         self._write("docs/releases/v0.1.0.md", "# Engineering Platform v0.0.9\n")
         self.assert_has_error("release notes heading does not match VERSION: v0.1.0")
+
+    def test_ci_workflow_requirement_is_reported(self) -> None:
+        self._write(
+            ".github/workflows/ci.yml",
+            "fetch-depth: 0\nunittest discover\n",
+        )
+        self.assert_has_error(
+            ".github/workflows/ci.yml does not describe required concept: validate-pr-policy.py"
+        )
 
     def test_release_workflow_requirement_is_reported(self) -> None:
         self._write(
