@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/context-input-v1.schema.json",
+  "title": "Context Input v1",
+  "type": "object",
+  "required": ["schema_version", "goal", "context"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "context-input/v1"},
+    "goal": {"type": "string", "minLength": 1},
+    "context": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["key", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "key": {"type": "string", "minLength": 1},
+          "value": {},
+          "source": {"type": "string", "minLength": 1},
+          "confidence": {"enum": ["high", "medium", "low", "unspecified"]},
+          "observed_at": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

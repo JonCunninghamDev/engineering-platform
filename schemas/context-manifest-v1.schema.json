@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/context-manifest-v1.schema.json",
+  "title": "Context Manifest v1",
+  "type": "object",
+  "required": ["schema_version", "run", "agent", "workflow", "goal", "readiness", "normalized_context", "provenance", "questions_for_human", "capabilities", "handoff"],
+  "properties": {
+    "schema_version": {"const": "context-manifest/v1"},
+    "agent": {
+      "type": "object",
+      "required": ["role", "version", "service_tier", "autonomy", "mode"],
+      "properties": {
+        "role": {"const": "context"},
+        "service_tier": {"enum": ["basic", "managed", "full"]},
+        "autonomy": {"enum": ["advisory", "supervised", "policy"]},
+        "mode": {"enum": ["demo", "test", "production"]}
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["ready_for_orchestration", "missing_required", "missing_recommended", "blocking_conflicts", "nonblocking_conflicts"]
+    },
+    "handoff": {
+      "type": "object",
+      "required": ["target", "artifact", "allowed"]
+    }
+  }
+}

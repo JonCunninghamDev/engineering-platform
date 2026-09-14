@@ -1,0 +1,10 @@
+{
+  "schema_version": "context-input/v1",
+  "goal": "Find strong software engineering opportunities and prepare the best ones for pursuit.",
+  "context": [
+    {"key": "candidate_profile", "value": "Jon Cunningham verified profile", "source": "human", "confidence": "high"},
+    {"key": "target_role_families", "value": ["Agentic Systems", "AI Platform", "Platform Engineering"], "source": "human", "confidence": "high"},
+    {"key": "location_constraints", "value": "Minneapolis/St. Paul or remote", "source": "human", "confidence": "high"},
+    {"key": "employment_preferences", "value": ["fulltime", "contract"], "source": "human", "confidence": "high"}
+  ]
+}

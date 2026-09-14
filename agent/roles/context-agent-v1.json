@@ -1,0 +1,52 @@
+{
+  "schema_version": "agent-role/v1",
+  "role": "context",
+  "version": "1.0.0",
+  "purpose": "Assemble and normalize sufficient scoped context before downstream orchestration.",
+  "dimensions": {
+    "service_tier": ["basic", "managed", "full"],
+    "autonomy": ["advisory", "supervised", "policy"],
+    "mode": ["demo", "test", "production"]
+  },
+  "implemented_tiers": ["basic"],
+  "tiers": {
+    "basic": {
+      "capabilities": [
+        "inspect_context_contract",
+        "normalize_supplied_context",
+        "identify_missing_context",
+        "detect_explicit_conflicts",
+        "formulate_blocking_questions",
+        "produce_context_manifest"
+      ]
+    },
+    "managed": {
+      "includes": "basic",
+      "status": "planned",
+      "capabilities": [
+        "retrieve_approved_context",
+        "verify_source_provenance",
+        "evaluate_context_freshness",
+        "generate_role_specific_context",
+        "request_blocking_context_interactively"
+      ]
+    },
+    "full": {
+      "includes": "managed",
+      "status": "planned",
+      "capabilities": [
+        "continuous_context_maintenance",
+        "automatic_context_enrichment",
+        "sensitivity_classification",
+        "cross_project_context_relationships",
+        "durable_verified_context_updates",
+        "stale_context_monitoring"
+      ]
+    }
+  },
+  "handoff": {
+    "artifact_schema": "context-manifest/v1",
+    "default_target": "orchestrator",
+    "requires_ready_for_orchestration": true
+  }
+}

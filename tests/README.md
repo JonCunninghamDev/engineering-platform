@@ -10,6 +10,7 @@ Tests should cover both accepted and rejected behavior. A prose rule is incomple
 - `test_validate_delivery_route.py` executes the reusable feature, promotion, synchronization, hotfix, direct-main rejection, and ambiguity matrix in `fixtures/delivery-routes.json`.
 - `test_validate_pr_policy.py` verifies that repository PR routes are valid and that feature/defect and hotfix work includes new or updated automated tests.
 - `test_agent_steering_scenarios.py` verifies the required autonomous, recovery, and human-gate decisions in `fixtures/agent-steering-scenarios-v1.json`.
+- `test_context_agent.py` verifies Basic Context Agent readiness, missing required context, explicit contradiction detection, strict service-tier boundaries, demo evidence, and `context.yaml` / run-report artifact generation using `fixtures/context-agent/`.
 
 Run the full Python test suite with:
 
@@ -23,4 +24,4 @@ CI also validates pull-request route/test evidence, compiles `scripts` and `test
 
 ## Later suites
 
-Later suites will cover policy schema fixtures and reusable workflow interface checks.
+Later suites will cover `engineering-policy/v1` schema fixtures and reusable workflow interface checks.
