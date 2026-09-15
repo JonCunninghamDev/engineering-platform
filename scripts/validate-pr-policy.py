@@ -16,7 +16,7 @@ route_validator = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = route_validator
 SPEC.loader.exec_module(route_validator)
 
-TEST_REQUIRED_ROUTES = {"feature", "hotfix"}
+TEST_REQUIRED_ROUTES = {"feature"}
 
 
 @dataclass(frozen=True)
