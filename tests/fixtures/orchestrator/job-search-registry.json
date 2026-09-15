@@ -1,0 +1,77 @@
+{
+  "schema_version": "capability-registry/v1",
+  "capabilities": [
+    {
+      "name": "opportunity.search",
+      "provider": "opportunity-scout",
+      "description": "Discover matching opportunities.",
+      "trigger_terms": ["find", "search", "opportunities", "roles"],
+      "dependencies": [],
+      "inputs": ["candidate_profile"],
+      "outputs": ["opportunities"],
+      "risk": "low",
+      "minimum_tier": "basic",
+      "human_gate": false
+    },
+    {
+      "name": "candidate.fit",
+      "provider": "fit-analyst",
+      "description": "Rank discovered opportunities by candidate fit.",
+      "trigger_terms": ["strong", "fit", "rank", "best"],
+      "dependencies": ["opportunity.search"],
+      "inputs": ["opportunities", "candidate_profile"],
+      "outputs": ["ranked_opportunities"],
+      "risk": "low",
+      "minimum_tier": "basic",
+      "human_gate": false
+    },
+    {
+      "name": "company.research",
+      "provider": "company-researcher",
+      "description": "Research selected companies and roles.",
+      "trigger_terms": ["research", "company", "deep"],
+      "dependencies": ["candidate.fit"],
+      "inputs": ["ranked_opportunities"],
+      "outputs": ["company_research"],
+      "risk": "low",
+      "minimum_tier": "basic",
+      "human_gate": false
+    },
+    {
+      "name": "demo.design",
+      "provider": "demo-strategist",
+      "description": "Design a tailored demonstration for a selected opportunity.",
+      "trigger_terms": ["demo", "prototype"],
+      "dependencies": ["candidate.fit"],
+      "inputs": ["ranked_opportunities"],
+      "outputs": ["demo_strategy"],
+      "risk": "medium",
+      "minimum_tier": "basic",
+      "human_gate": true
+    },
+    {
+      "name": "interview.prepare",
+      "provider": "interview-strategist",
+      "description": "Prepare for a scheduled interview.",
+      "trigger_terms": ["interview"],
+      "dependencies": ["company.research"],
+      "inputs": ["company_research"],
+      "outputs": ["interview_plan"],
+      "risk": "low",
+      "minimum_tier": "basic",
+      "human_gate": false
+    },
+    {
+      "name": "execution.dispatch",
+      "provider": "orchestrator-runtime",
+      "description": "Dispatch downstream agents for live execution.",
+      "trigger_terms": ["execute"],
+      "dependencies": [],
+      "inputs": ["execution_plan"],
+      "outputs": ["live_tasks"],
+      "risk": "medium",
+      "minimum_tier": "managed",
+      "human_gate": false
+    }
+  ]
+}
