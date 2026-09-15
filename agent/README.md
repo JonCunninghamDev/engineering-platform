@@ -7,8 +7,10 @@ Contracts define general behavior such as startup verification, task selection, 
 ## Contracts
 
 - [`operating-contract-v1.md`](operating-contract-v1.md) — reusable contract for ordinary, interrupted, and autonomous recurring agent work.
-- [`context-agent-v1.md`](context-agent-v1.md) — first specialized role contract, defining the Basic Context Agent, tier boundaries, readiness rules, demo behavior, and downstream handoff.
+- [`context-agent-v1.md`](context-agent-v1.md) — specialized Context Agent contract defining Basic-tier intake, readiness, demo behavior, and downstream handoff.
 - [`roles/context-agent-v1.json`](roles/context-agent-v1.json) — machine-readable Context Agent role, service-tier capability matrix, autonomy dimensions, and handoff contract.
+- [`orchestrator-agent-v1.md`](orchestrator-agent-v1.md) — specialized Orchestrator contract defining Basic-tier capability selection, dependency planning, explanations, and zero-dispatch demo behavior.
+- [`roles/orchestrator-agent-v1.json`](roles/orchestrator-agent-v1.json) — machine-readable Orchestrator role and service-tier capability matrix.
 
 Product vision, architecture, domain rules, credentials, environments, and repository-specific exceptions remain in consumer repositories.
 

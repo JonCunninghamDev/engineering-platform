@@ -1,146 +1,272 @@
 # Engineering Platform
 
-Shared engineering infrastructure for JonCunninghamDev repositories.
+A governed, agent-native engineering platform for running software work through explicit context, planning, capability, policy, testing, review, observability, and human-decision boundaries.
 
-**Declared platform version:** `0.1.0`  
-**Expected release tag:** `v0.1.0`
+**Published platform version:** `0.1.0`  
+**Published release tag:** `v0.1.0`
 
-The `VERSION` file declares the steering version. A version is published only when the latest non-draft, non-prerelease GitHub release has the matching `v<VERSION>` tag and that tag resolves to a commit on `main`.
+`main` is the released/production source of truth. `develop` is the current integration branch and may contain capabilities that are not yet part of the published `v0.1.0` release.
 
-This repository is the authoring source of truth for:
+This repository is the **authoring source of truth** for reusable Engineering Platform contracts, schemas, standards, policy, agent implementations, tests, workflows, and release governance.
 
-- reusable agent operating contracts;
-- engineering and delivery standards;
-- executable repository policy;
-- reusable GitHub Actions workflows and actions;
-- issue and pull-request templates;
-- language and toolchain profiles;
-- steering and workflow scenario tests.
+The long-term goal is not a collection of coding bots. The platform is intended to provide a reusable operating system for governed engineering agents that can work across different repositories, tools, and engagements while keeping authority, evidence, and human accountability explicit.
+
+## Current development state
+
+The current `develop` line includes the first agent-native vertical slices:
+
+- **Basic Context Agent** — validates and normalizes supplied context, identifies missing or conflicting required information, preserves provenance, and emits an inspectable `context.yaml` handoff.
+- **Basic Orchestrator Agent** — accepts only a ready Context Agent handoff, inspects a machine-readable capability registry, selects the minimum sufficient capabilities for the stated goal, builds an acyclic dependency graph, explains selected and skipped capabilities, and emits `execution-plan.yaml`.
+- **Tier-aware demo behavior** — agent runs explicitly report active service tier, autonomy, and execution mode and show higher-tier capabilities as locked rather than pretending they executed.
+- **Two-long-lived-branch delivery model** — `main` is production, `develop` is integration, and all implementation work uses temporary branches created from current `develop` and merged back into `develop` before release promotion.
+
+The Basic Orchestrator intentionally does **not** dispatch downstream agents. Live dispatch, runtime task-state management, retries, replanning, parallel execution, and human-gate routing are planned higher-tier orchestration capabilities.
+
+## Agent operating model
+
+The platform separates four dimensions that must not be conflated:
+
+1. **Role** — what kind of work the agent performs, such as Context, Orchestrator, Builder, Verifier, Reviewer, Architect, or Operations.
+2. **Service tier** — how much of that role's responsibility is implemented, currently modeled as Basic, Managed, and Full.
+3. **Autonomy** — what the agent may decide or execute without approval.
+4. **Execution mode** — whether the run is demo, test, or production.
+
+An effective agent is therefore composed from a role, capability set, tier, autonomy policy, and execution mode rather than from a separate prompt for every product package.
+
+For example:
+
+```text
+Context Agent
+  tier: BASIC
+  autonomy: ADVISORY
+  mode: DEMO
+```
+
+may normalize supplied context and produce a handoff, while Managed and Full context-retrieval or maintenance capabilities remain visibly locked.
+
+## Current agent flow
+
+The implemented development flow is:
+
+```text
+Human / system context
+        |
+        v
+Context Agent
+BASIC | tier-aware | demo-capable
+        |
+        | context.yaml
+        v
+Orchestrator Agent
+BASIC | planner only
+        |
+        | execution-plan.yaml
+        v
+Would-invoke downstream capabilities
+(no Basic-tier dispatch)
+```
+
+The Orchestrator plans against a machine-readable capability registry. It records why a capability was selected, why a relevant capability was skipped, dependency ordering, provider role, risk, tier availability, and human-gate requirements.
+
+This makes orchestration inspectable and prevents the default behavior of invoking every available agent for every task.
+
+## Context and handoff contracts
+
+Agent handoffs are first-class versioned artifacts rather than implicit conversation state.
+
+Current contracts include:
+
+- `context-contract/v1` — declares required, recommended, and optional context for a workflow;
+- `context-input/v1` — represents supplied context and provenance;
+- `context-manifest/v1` — records normalized context, readiness, provenance, tier/autonomy/mode, capability evidence, and downstream handoff permission;
+- `capability-registry/v1` — describes available capabilities, providers, dependencies, risk, tier availability, and human-gate requirements;
+- `execution-plan/v1` — records the Orchestrator's selected task graph and planned downstream work;
+- `agent-run-report/v1` — provides machine-readable run evidence for demo tooling and future management interfaces.
+
+The design principle is simple: a downstream agent should be able to determine exactly what it received, where the information came from, what level of processing produced it, and whether the handoff is permitted.
+
+## Demo mode
+
+Demo mode uses the real decision and planning logic but stops at consequential execution boundaries.
+
+A demo run should show:
+
+- what the agent received;
+- why it was invoked;
+- active service tier, autonomy, and mode;
+- capabilities used;
+- capabilities available at the active tier but unnecessary;
+- capabilities locked by higher tiers;
+- decisions and reasons;
+- artifacts produced;
+- downstream handoff;
+- actions that **would** execute at a higher permitted level.
+
+Basic Orchestrator demo output therefore reports downstream tasks as `WOULD_INVOKE` and records a dispatch count of zero.
+
+## Human Lead and engagement direction
+
+The planned management layer will treat each company, client, internal project, or other work relationship as an isolated **Engagement**.
+
+A future Human Lead Console is expected to provide a consistent drill-down model:
+
+```text
+Engagement
+  -> Stories
+     -> Engineering Run
+        -> Agent execution graph
+           -> Agent evidence / artifacts / decisions
+```
+
+An engagement may define its own approved tools, repositories, communications sources, credentials, coding standards, cloud environment, policies, and agent tiers. Engagement context and credentials must remain isolated; generic platform capabilities may be reused, but confidential engagement data must not cross engagement boundaries without explicit authorization.
+
+The console itself is not implemented in this repository yet. The contracts and telemetry produced here are intended to make such a UI possible without scraping prose or reconstructing hidden model state.
 
 ## Agent startup and release verification
 
-When an agent is pointed at this repository, it must:
+The `VERSION` file declares the expected published steering version. A version is published only when the **latest non-draft, non-prerelease GitHub release** exists with the matching `v<VERSION>` tag and the tagged commit is reachable from `main`.
 
-1. Verify repository access with a real GitHub call and confirm the default branch is `main`.
+When an agent starts work in this repository it must:
+
+1. Verify repository access with a real GitHub operation and confirm the default branch is `main`.
 2. Read this README first.
-3. Read `VERSION`, then form the expected release tag as `v<VERSION>`.
-4. Query the latest non-draft, non-prerelease GitHub release.
-5. Verify that the release tag exactly matches the expected tag and that its tagged commit is reachable from `main`.
-6. Read `AGENTS.md`, `agent/operating-contract-v1.md`, `docs/task-management.md`, and any other files required for the active task.
-7. State the verified release tag and commit before treating this repository as published shared steering.
+3. Read `VERSION` and form the expected release tag as `v<VERSION>`.
+4. Query the latest non-draft, non-prerelease GitHub release and verify that its tag matches the expected tag and its tagged commit is reachable from `main`.
+5. Read `AGENTS.md`, `agent/operating-contract-v1.md`, `docs/task-management.md`, and other steering required for the active task.
+6. Inspect current issues, pull requests, CI, reviews, and branch state.
+7. Confirm `develop` contains all current `main` history before starting implementation work.
+8. Continue the deterministic active task rather than relying on conversational memory.
 
-If the release is absent, mismatched, draft, prerelease, or not reachable from `main`, the agent must not represent the current files as published shared steering. It should report the mismatch and inspect the release workflow, open pull requests, and issue state. Branch-local files may still guide maintenance work on that branch, but they are not an approved consumer release.
-
-## How agents work
-
-The reusable operating contract is `agent/operating-contract-v1.md`. The concrete decision examples are `agent/steering-scenarios-v1.md` and its executable fixture mirror under `tests/fixtures/`.
-
-The contract defines the default behavior for ordinary, interrupted, and recurring autonomous work:
-
-- reconstruct state from GitHub rather than conversational memory;
-- select work deterministically from existing pull requests and issues;
-- make bounded, reversible, testable engineering decisions without unnecessary human questions;
-- validate changes and inspect CI rather than assuming a write succeeded;
-- leave durable resumable state after every run;
-- merge only when repository policy explicitly allows autonomous merge;
-- stop at explicit human gates such as governance changes, credentials, privacy/security changes, destructive migrations, consequential releases, or ambiguous cross-repository risk.
-
-Consumer repositories can narrow these rules through explicit local steering and policy, but should not silently broaden agent authority.
-
-## What belongs here
-
-Centralize mechanics that should behave consistently across repositories:
-
-- startup and interrupted-run recovery;
-- task states and deterministic selection;
-- autonomous and recurring agent execution;
-- feature, integration, promotion, synchronization, and hotfix routes;
-- CI failure ownership and troubleshooting;
-- reusable toolchain setup and caching;
-- build and delivery metadata;
-- common security, dependency, testing, and observability standards.
-
-Do not centralize product-specific truth:
-
-- product vision;
-- repository architecture;
-- visual or domain standards;
-- application acceptance criteria;
-- credentials, environments, and service ownership;
-- repository-specific risk exceptions.
-
-## Adoption model
-
-The platform is a versioned authoring source, not a required remote dependency during every agent run.
-
-A consumer repository:
-
-1. pins a verified platform release and its immutable commit;
-2. records the adopted tag and commit in a local manifest;
-3. keeps a concise local `AGENTS.md` with product-specific context and exceptions;
-4. keeps any required synchronized base contract locally for fast startup and offline operation;
-5. invokes reusable workflows by pinned release tag or full commit SHA;
-6. accepts platform updates through tested pull requests.
-
-Consumers remain independently buildable and revertible. A platform outage must not prevent an agent from reading local repository steering or running local tests.
-
-## Delivery routing
-
-`docs/delivery-routing.md` defines shared feature, promotion, synchronization, and hotfix semantics. `scripts/validate-delivery-route.py` provides a reusable validator with configurable default and integration branch names. `scripts/validate-pr-policy.py` adds this repository's test-evidence requirement. The deterministic valid/invalid route matrix is `tests/fixtures/delivery-routes.json`.
-
-Ordinary work targets the integration branch. Promotion to the released branch uses `Release:`, release-history synchronization back to integration uses `Sync:`, and a dedicated released-branch hotfix uses `Hotfix:`. Invalid direct-main and ambiguous routes fail with actionable errors.
+Branch-local files may guide development, but they are not consumer-authoritative until released through `main`.
 
 ## Development workflow
 
-The repository follows a production/integration model:
+The repository uses exactly two long-lived branches:
 
-1. `main` is released/production state.
-2. `develop` is integration and must contain all current `main` history before ordinary work starts.
-3. Create each feature or defect branch from current `develop`.
-4. Add or update automated tests under `tests/` for the changed behavior.
-5. Implement the change and run the full suite before commit: `python -m unittest discover -s tests -p 'test_*.py' -v`.
-6. Open the feature/defect PR into `develop`; Platform CI validates the route, test evidence, repository structure, and full suite.
-7. Promote `develop` to `main` only through a `Release:` PR after green CI and required human approval.
-8. Synchronize `main` back into `develop` with a `Sync:` route when release history would otherwise leave integration behind.
+- `main` — released/production state;
+- `develop` — current integration state and the base for all implementation work.
 
-Branch protection or repository rulesets should require pull requests and the stable `Validate engineering platform` check on both shared branches so ordinary direct pushes cannot bypass CI.
+Every feature, defect, or urgent production fix follows the same route:
+
+```text
+develop
+   |
+   v
+temporary implementation branch
+   |
+   | PR + tests + Platform CI
+   v
+develop
+   |
+   | reviewed Release: PR + human approval
+   v
+main
+```
+
+Rules:
+
+1. Synchronize current `main` history into `develop` before ordinary implementation work when needed.
+2. Create every implementation branch from current `develop`.
+3. Target every implementation PR back to `develop`.
+4. Add or update automated tests for changed behavior.
+5. Run the full suite before considering the change ready for review:
+
+   ```bash
+   python -m unittest discover -s tests -p 'test_*.py' -v
+   ```
+
+6. Platform CI validates route policy, test-change evidence, repository structure, the full Python suite, Python compilation, shell syntax, JSON, and YAML.
+7. Production changes reach `main` only through a `develop -> main` `Release:` PR with required human approval.
+8. Synchronize approved `main` release history back into `develop` when required to keep integration current.
+9. Delete temporary implementation branches after merge.
+10. There is no separate direct-to-`main` hotfix route.
+
+## Implementation authority and human gates
+
+Agents may make bounded, reversible, local, testable engineering decisions inside an accepted issue when repository policy permits them.
+
+Human approval remains required for consequential boundaries including shared agent authority, public policy/schema changes with consumer impact, reusable workflow behavior, credentials and security authority, destructive migrations, backward-incompatible contracts, ambiguous cross-repository risk, and every `develop -> main` release promotion.
+
+Automated tests are evidence, not a substitute for human acceptance of consequential changes.
+
+## What belongs in this repository
+
+Centralize reusable engineering mechanics and contracts:
+
+- agent operating contracts and specialized role contracts;
+- context, capability, handoff, run, and policy schemas;
+- deterministic task and delivery rules;
+- reusable CI/CD workflows and actions;
+- common testing, security, observability, and delivery standards;
+- capability and service-tier definitions;
+- telemetry and evidence contracts;
+- reusable templates and adoption guidance.
+
+Keep product- and engagement-specific truth in consumer repositories or engagement configuration:
+
+- product purpose and business rules;
+- application architecture and domain-specific acceptance criteria;
+- customer/employer credentials and confidential context;
+- environment-specific ownership and permissions;
+- repository-specific risk exceptions;
+- visual/product decisions that are not reusable platform policy.
+
+## Adoption model
+
+A consumer repository should pin a verified Engineering Platform release rather than depend on the live platform repository during every run.
+
+A consumer can:
+
+1. pin a released platform tag and immutable commit;
+2. keep concise repository-local steering and product truth;
+3. keep required synchronized contracts locally for fast and resilient startup;
+4. invoke reusable workflows by pinned release or immutable SHA;
+5. adopt platform updates through focused, tested pull requests;
+6. remain independently buildable and revertible if this repository is unavailable.
 
 ## Repository layout
 
 ```text
-agent/       shared operating contracts and steering scenarios
-standards/   Git, testing, security, delivery, and observability standards
-schemas/     versioned machine-readable policy schemas
-profiles/    language and toolchain profiles
+agent/       operating contracts and specialized agent-role definitions
+standards/   shared Git, testing, security, delivery, and observability standards
+schemas/     versioned context, capability, handoff, run, and policy schemas
+profiles/    reusable language, toolchain, service-tier, and policy profiles
 templates/   consumer repository and workflow templates
-actions/     reusable composite or JavaScript actions
-.github/     reusable and repository-local workflows
+actions/     reusable actions
+.github/     repository-local and reusable GitHub workflows
 docs/        adoption, task management, release, routing, and governance documentation
-tests/       policy and steering scenario fixtures
-scripts/     platform validation and maintenance commands
+tests/       deterministic policy, agent, and steering tests and fixtures
+scripts/     executable platform agents, validation, and maintenance commands
 ```
-
-## Branches and releases
-
-- `main` is the released platform source of truth and production-equivalent branch.
-- `develop` is the integration branch and should never be behind `main` when ordinary work begins.
-- Ordinary issue branches use `agent/issue-<number>-<slug>`, start from `develop`, include test changes, and target `develop`.
-- Platform releases are promoted from `develop` to `main` after green CI and human approval using an explicit `Release:` route.
-- Approved release history is synchronized from `main` back into `develop` using an explicit `Sync:` route.
-- Hotfixes use a dedicated branch from `main`, target `main`, include automated tests, use an explicit `Hotfix:` title, require human approval before merge, and are subsequently reconciled into `develop`.
-- After Platform CI succeeds on `main`, the release workflow publishes the `v<VERSION>` GitHub release if it does not already exist.
-- Consumers pin the verified release tag and full release commit rather than an unversioned branch.
 
 ## Current roadmap
 
-Released foundation:
+**Published foundation**
 
-1. Bootstrap the repository foundation.
-2. Publish the shared steering baseline as `v0.1.0`.
+- `v0.1.0` repository, steering, validation, CI, and release foundation.
 
-Next:
+**Implemented on the current development line**
 
-1. Centralize delivery-route policy, autonomous operating behavior, and steering scenarios.
-2. Define `engineering-policy/v1` and initial profiles.
-3. Add the reusable `node-python-blender` CI workflow.
-4. Migrate `JonCunninghamDev/low-poly-character-studio` as the first consumer.
+- two-long-lived-branch delivery policy;
+- Basic Context Agent;
+- context and run-report contracts;
+- Basic Orchestrator Agent and capability registry;
+- tier-aware demo behavior and deterministic agent tests.
+
+**Next agent vertical slices**
+
+1. Basic Builder Agent.
+2. Basic Verifier Agent.
+3. Basic Reviewer Agent.
+4. Basic Architect Agent.
+5. Basic Operations Agent.
+
+**Platform expansion**
+
+- `engineering-policy/v1` and composable permission profiles;
+- Managed and Full service tiers;
+- governed downstream dispatch and runtime task-state management;
+- telemetry for wall time, agent execution, human attention, cost, rework, and accepted outcomes;
+- engagement isolation contracts;
+- Human Lead Console integration;
+- consumer workflows such as Career Ops / Find Me a Job.
