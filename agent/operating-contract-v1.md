@@ -110,13 +110,14 @@ A recurring run should be idempotent at the workflow level: re-running startup a
 
 ## 7. Branch and delivery routes
 
-The consumer repository defines branch names, but the shared route semantics are:
+The consumer repository defines branch names, but the shared route semantics use exactly two long-lived branches: a release/default branch and an integration branch.
 
-- Feature/ordinary work: task branch -> integration branch.
+- Feature, defect, and urgent-fix work: temporary task branch created from current integration -> integration branch.
 - Integration: approved task changes accumulate on the integration branch.
 - Promotion/release: integration branch -> release/default branch under the repository's release gate.
-- Synchronization: approved release history returns to the integration branch explicitly.
-- Hotfix: release/default branch -> hotfix branch -> release/default branch, followed by reconciliation into integration.
+- Synchronization: approved release history returns to the integration branch explicitly after promotion when needed to keep histories aligned.
+- There is no direct implementation or hotfix route to the release/default branch.
+- Temporary implementation branches should be deleted after their changes merge.
 
 Direct writes to protected shared branches are prohibited unless the repository explicitly defines a different safe route.
 
