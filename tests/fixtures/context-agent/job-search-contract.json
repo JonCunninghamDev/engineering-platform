@@ -1,0 +1,12 @@
+{
+  "schema_version": "context-contract/v1",
+  "workflow": "job_opportunity_search",
+  "fields": [
+    {"key": "candidate_profile", "requirement": "required", "prompt": "Which verified candidate profile should this search use?"},
+    {"key": "target_role_families", "requirement": "required", "prompt": "Which role families should the search target?"},
+    {"key": "location_constraints", "requirement": "required", "prompt": "What location or remote-work constraints apply?"},
+    {"key": "employment_preferences", "requirement": "required", "prompt": "Which employment types should be considered?"},
+    {"key": "compensation_target", "requirement": "recommended", "prompt": "What compensation target or minimum should be used?"},
+    {"key": "preferred_companies", "requirement": "optional", "prompt": "Are there preferred companies?"}
+  ]
+}

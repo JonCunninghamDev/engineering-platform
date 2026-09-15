@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/agent-run-report-v1.schema.json",
+  "title": "Agent Run Report v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "agent", "why_invoked", "workflow", "status", "decisions", "capabilities", "outputs", "handoff", "metrics"],
+  "properties": {
+    "schema_version": {"const": "agent-run-report/v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "minLength": 1},
+    "why_invoked": {"type": "string", "minLength": 1},
+    "workflow": {"type": "string", "minLength": 1},
+    "agent": {"type": "object"},
+    "decisions": {"type": "array"},
+    "capabilities": {"type": "object"},
+    "outputs": {"type": "array"},
+    "handoff": {"type": "object"},
+    "metrics": {"type": "object"}
+  }
+}
