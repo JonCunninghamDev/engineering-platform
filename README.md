@@ -7,6 +7,8 @@ A governed, agent-native engineering platform for running software work through 
 
 `main` is the released/production source of truth. `develop` is the current integration branch and may contain capabilities that are not yet part of the published `v0.1.0` release.
 
+This repository is the **authoring source of truth** for reusable Engineering Platform contracts, schemas, standards, policy, agent implementations, tests, workflows, and release governance.
+
 The long-term goal is not a collection of coding bots. The platform is intended to provide a reusable operating system for governed engineering agents that can work across different repositories, tools, and engagements while keeping authority, evidence, and human accountability explicit.
 
 ## Current development state
@@ -120,19 +122,20 @@ An engagement may define its own approved tools, repositories, communications so
 
 The console itself is not implemented in this repository yet. The contracts and telemetry produced here are intended to make such a UI possible without scraping prose or reconstructing hidden model state.
 
-## Source of truth and release verification
+## Agent startup and release verification
 
-The `VERSION` file declares the expected published steering version. A version is published only when a non-draft, non-prerelease GitHub release exists with the matching `v<VERSION>` tag and the tagged commit is reachable from `main`.
+The `VERSION` file declares the expected published steering version. A version is published only when the **latest non-draft, non-prerelease GitHub release** exists with the matching `v<VERSION>` tag and the tagged commit is reachable from `main`.
 
 When an agent starts work in this repository it must:
 
 1. Verify repository access with a real GitHub operation and confirm the default branch is `main`.
 2. Read this README first.
-3. Read `VERSION` and verify the corresponding published release.
-4. Read `AGENTS.md`, `agent/operating-contract-v1.md`, `docs/task-management.md`, and other steering required for the active task.
-5. Inspect current issues, pull requests, CI, reviews, and branch state.
-6. Confirm `develop` contains all current `main` history before starting implementation work.
-7. Continue the deterministic active task rather than relying on conversational memory.
+3. Read `VERSION` and form the expected release tag as `v<VERSION>`.
+4. Query the latest non-draft, non-prerelease GitHub release and verify that its tag matches the expected tag and its tagged commit is reachable from `main`.
+5. Read `AGENTS.md`, `agent/operating-contract-v1.md`, `docs/task-management.md`, and other steering required for the active task.
+6. Inspect current issues, pull requests, CI, reviews, and branch state.
+7. Confirm `develop` contains all current `main` history before starting implementation work.
+8. Continue the deterministic active task rather than relying on conversational memory.
 
 Branch-local files may guide development, but they are not consumer-authoritative until released through `main`.
 
