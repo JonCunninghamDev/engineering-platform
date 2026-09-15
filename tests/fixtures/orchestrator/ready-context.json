@@ -1,0 +1,28 @@
+{
+  "schema_version": "context-manifest/v1",
+  "run": {"id": "context-test-001", "created_at": "2026-09-15T00:00:00Z"},
+  "agent": {
+    "role": "context",
+    "version": "1.0.0",
+    "service_tier": "basic",
+    "autonomy": "advisory",
+    "mode": "demo"
+  },
+  "workflow": "job_opportunity_search",
+  "goal": "Find strong software engineering opportunities and deeply research the best matches.",
+  "readiness": {
+    "ready_for_orchestration": true,
+    "missing_required": [],
+    "missing_recommended": [],
+    "blocking_conflicts": [],
+    "nonblocking_conflicts": []
+  },
+  "normalized_context": {
+    "candidate_profile": "verified",
+    "target_role_families": ["agentic systems", "platform engineering"]
+  },
+  "provenance": [],
+  "questions_for_human": [],
+  "capabilities": {"used": [], "available_unused": [], "locked_by_tier": {}},
+  "handoff": {"target": "orchestrator", "artifact": "context.yaml", "allowed": true}
+}
