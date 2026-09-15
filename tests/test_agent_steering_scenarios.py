@@ -12,7 +12,7 @@ REQUIRED = {
     "branch-conflict",
     "promotion",
     "synchronization",
-    "hotfix",
+    "urgent-fix",
     "incident",
     "credential",
     "visual",
@@ -38,7 +38,14 @@ class AgentSteeringScenarioTests(unittest.TestCase):
     def test_human_gate_set_covers_consequential_classes(self) -> None:
         scenarios = json.loads(FIXTURES.read_text(encoding="utf-8"))
         gated = {item["name"] for item in scenarios if item["decision"] == "human_gate"}
-        self.assertTrue({"promotion", "hotfix", "credential", "visual", "destructive"} <= gated)
+        self.assertTrue({"promotion", "credential", "visual", "destructive"} <= gated)
+
+    def test_urgent_fix_uses_normal_implementation_route(self) -> None:
+        scenarios = json.loads(FIXTURES.read_text(encoding="utf-8"))
+        by_name = {scenario["name"]: scenario for scenario in scenarios}
+        self.assertEqual("autonomous", by_name["urgent-fix"]["decision"])
+        self.assertIn("integration", by_name["urgent-fix"]["reason"])
+        self.assertIn("release promotion", by_name["urgent-fix"]["reason"])
 
     def test_recovery_set_covers_interrupted_and_recurring_runs(self) -> None:
         scenarios = json.loads(FIXTURES.read_text(encoding="utf-8"))
