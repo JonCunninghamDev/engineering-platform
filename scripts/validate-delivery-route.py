@@ -7,7 +7,7 @@ import os
 import sys
 from dataclasses import dataclass
 
-RESERVED_PREFIXES = ("Release:", "Sync:", "Hotfix:")
+RESERVED_PREFIXES = ("Release:", "Sync:")
 
 
 @dataclass(frozen=True)
@@ -32,10 +32,12 @@ def validate_route(
     default_branch: str = "main",
     integration_branch: str = "develop",
 ) -> RouteResult:
-    """Validate a pull-request delivery route using only PR metadata.
+    """Validate the two-long-lived-branch delivery model using PR metadata.
 
-    The validator is intentionally product-agnostic. Consumers can supply their
-    own default and integration branch names while retaining the route semantics.
+    All implementation branches target the integration branch. The integration
+    branch promotes to the release/default branch, and released history may then
+    synchronize back to integration. There is no direct implementation route to
+    the release/default branch.
     """
     base = base.strip()
     head = head.strip()
@@ -75,19 +77,15 @@ def validate_route(
         if not _starts_with(title, "Sync:"):
             errors.append("synchronization PR title must start with 'Sync:'")
     elif base == default_branch:
-        if _starts_with(title, "Hotfix:"):
-            route = "hotfix"
-            if head in {default_branch, integration_branch}:
-                errors.append("hotfix head must be a dedicated branch, not a shared branch")
-        else:
-            errors.append(
-                "direct-main route rejected: ordinary work must target the integration branch; "
-                "use 'Release:' for integration promotion or 'Hotfix:' for a dedicated hotfix branch"
-            )
+        errors.append(
+            "direct-main route rejected: all implementation work must branch from the integration "
+            "branch, return to the integration branch, and reach production only through an "
+            "integration-to-main release promotion"
+        )
     elif base == integration_branch:
         route = "feature"
         if head in {default_branch, integration_branch}:
-            errors.append("ordinary integration work must come from a dedicated task branch")
+            errors.append("ordinary integration work must come from a dedicated temporary branch")
         for prefix in RESERVED_PREFIXES:
             if _starts_with(title, prefix):
                 errors.append(
@@ -97,13 +95,13 @@ def validate_route(
                 break
     else:
         errors.append(
-            f"unsupported base branch '{base}'; expected '{integration_branch}' for ordinary work "
-            f"or '{default_branch}' for release/hotfix work"
+            f"unsupported base branch '{base}'; expected '{integration_branch}' for implementation "
+            f"work or '{default_branch}' only for integration release promotion"
         )
 
-    if route == "promotion" and (_starts_with(title, "Sync:") or _starts_with(title, "Hotfix:")):
+    if route == "promotion" and _starts_with(title, "Sync:"):
         errors.append("promotion PR uses a reserved title for a different route")
-    if route == "synchronization" and (_starts_with(title, "Release:") or _starts_with(title, "Hotfix:")):
+    if route == "synchronization" and _starts_with(title, "Release:"):
         errors.append("synchronization PR uses a reserved title for a different route")
 
     return RouteResult(route if not errors else route, tuple(errors))

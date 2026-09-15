@@ -5,7 +5,7 @@
   {"name":"branch-conflict","situation":"Ordinary merge conflict without accepted-behavior change","decision":"recover","reason":"safe conflict resolution is autonomous"},
   {"name":"promotion","situation":"Integration branch is ready to promote to the released branch","decision":"human_gate","reason":"release promotion requires explicit human approval"},
   {"name":"synchronization","situation":"Approved release history must return to integration","decision":"autonomous","reason":"explicit Sync route is reversible repository maintenance when policy permits"},
-  {"name":"hotfix","situation":"Urgent bounded fix is required on the released branch","decision":"human_gate","reason":"released-branch change is consequential even when implementation is bounded"},
+  {"name":"urgent-fix","situation":"An urgent bounded production fix is required","decision":"autonomous","reason":"implement from current integration on a temporary branch, validate, merge to integration, then use the normal human-gated release promotion"},
   {"name":"incident","situation":"Production incident requires diagnosis before a safe change is known","decision":"recover","reason":"gather evidence and isolate failure before escalating consequential action"},
   {"name":"credential","situation":"Work requires adding or broadening a secret or credential","decision":"human_gate","reason":"credential authority cannot be broadened autonomously"},
   {"name":"visual","situation":"Consumer marks a user-visible visual choice as requiring acceptance","decision":"human_gate","reason":"explicit consumer acceptance rule applies"},

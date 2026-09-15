@@ -7,6 +7,7 @@ This repository defines shared engineering behavior used by other repositories. 
 - GitHub state and repository files are authoritative.
 - `main` is the released platform source of truth and is treated as production.
 - `develop` is the integration branch and must contain all current `main` history before ordinary feature work begins.
+- `main` and `develop` are the only long-lived branches. Every other branch is a temporary implementation branch and should be deleted after its work merges.
 - Issues are the canonical backlog; pull requests are the canonical implementation and review record.
 - `VERSION` declares the expected platform release.
 - Read `README.md` first, then this file, `agent/operating-contract-v1.md`, and `docs/task-management.md` at the beginning of every run.
@@ -47,19 +48,22 @@ Do not claim GitHub is unavailable without an actual failed connector call and t
 
 ## Branch and pull-request contract
 
-- `main` is production/released state; do not use it for ordinary feature development.
+- `main` is production/released state; do not use it for implementation work.
 - `develop` is integration and must be synchronized with `main` before starting ordinary work.
+- `main` and `develop` are the only long-lived branches.
+- Every implementation branch starts from current `develop`, including urgent production fixes.
 - Ordinary branch: `agent/issue-<number>-<slug>` from current `develop`.
-- Ordinary target: `develop`.
-- Do not commit ordinary feature or defect work directly to `develop` or `main`.
-- On every feature/defect branch, add or update automated tests under `tests/` for the changed behavior. Test-first development is preferred when practical.
+- Every implementation branch targets `develop`.
+- Do not commit feature, defect, or urgent-fix work directly to `develop` or `main`.
+- On every implementation branch, add or update automated tests under `tests/` for changed behavior. Test-first development is preferred when practical.
 - Before committing implementation changes, run the full suite: `python -m unittest discover -s tests -p 'test_*.py' -v`. Commit only after the suite passes.
 - Pull requests into `develop` must pass Platform CI, including delivery-route validation, required test-change evidence, repository validation, and the full test suite.
 - Production/release promotion: `develop` to `main` using an explicit `Release:` title after green CI and required human approval.
 - Synchronization after promotion: `main` to `develop` using an explicit `Sync:` title so released history remains contained in integration.
-- Hotfixes start from `main`, target `main`, begin with `Hotfix:`, include new or updated automated tests, and require human approval before merge; reconcile them back into `develop` afterward.
+- There is no direct hotfix route to `main`. Urgent fixes use the same temporary-branch -> `develop` -> `main` promotion path as all other implementation work.
+- Delete temporary implementation branches after their work is merged.
 - Never force-push a shared branch.
-- Maintain at most two active implementation branches.
+- Maintain at most two active temporary implementation branches.
 
 Branch protection or repository rulesets should require pull requests and the `Validate engineering platform` Platform CI check for both `develop` and `main`. CI validates the route and evidence; branch protection prevents bypassing that CI through ordinary direct pushes.
 
@@ -145,7 +149,7 @@ An issue is ready for review when:
 
 - acceptance criteria are satisfied;
 - required automated checks pass;
-- feature/defect or hotfix work includes new or updated automated tests;
+- implementation work includes new or updated automated tests;
 - the full local test suite passed before commit;
 - contracts and behavior are tested;
 - versioning and compatibility effects are documented;

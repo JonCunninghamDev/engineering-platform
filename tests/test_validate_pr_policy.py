@@ -37,15 +37,25 @@ class PullRequestPolicyTests(unittest.TestCase):
         self.assertTrue(result.valid, result.errors)
         self.assertEqual("feature", result.route)
 
-    def test_hotfix_requires_test_change(self) -> None:
+    def test_urgent_fix_uses_same_feature_route_and_requires_tests(self) -> None:
+        result = module.validate_pr_policy(
+            base="develop",
+            head="agent/issue-31-urgent-fix",
+            title="Urgent: repair release check",
+            changed_files=["scripts/release.py"],
+        )
+        self.assertFalse(result.valid)
+        self.assertIn("feature PR", " ".join(result.errors))
+
+    def test_hotfix_direct_to_main_is_rejected_even_with_tests(self) -> None:
         result = module.validate_pr_policy(
             base="main",
             head="hotfix/release-check",
             title="Hotfix: repair release check",
-            changed_files=["scripts/release.py"],
+            changed_files=["scripts/release.py", "tests/test_release.py"],
         )
         self.assertFalse(result.valid)
-        self.assertIn("hotfix PR", " ".join(result.errors))
+        self.assertIn("direct-main route rejected", " ".join(result.errors))
 
     def test_promotion_does_not_require_new_test_change(self) -> None:
         result = module.validate_pr_policy(
