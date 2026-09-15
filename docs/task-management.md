@@ -35,8 +35,10 @@ Each issue includes outcome, scope, acceptance criteria, dependencies, and imple
 3. Continue the lowest-numbered `IN PROGRESS` issue.
 4. Otherwise select the lowest priority number among eligible `READY` issues.
 5. Break ties by issue number.
-6. Maintain at most two active implementation branches.
+6. Maintain at most two active temporary implementation branches.
 7. Start a second issue only while the first waits exclusively on CI, human acceptance testing, review, or another non-interactive state and the work is independent.
+
+Do not create side work merely to remain busy. Record newly discovered work as a follow-up issue unless it is required to satisfy the current issue's acceptance criteria.
 
 ## Recurring autonomous runs
 
@@ -50,7 +52,7 @@ At each recurring run:
 4. Verify whether the previous run's intended writes already landed before repeating them.
 5. Make the largest bounded increment that can be tested and safely handed off.
 6. Push durable progress to the issue branch and record non-obvious next-state information in the issue or pull request.
-7. If CI is the only waiting state, perform one independent non-overlapping task only when the two-branch rule permits it.
+7. If CI is the only waiting state, perform one independent non-overlapping task only when the two-active-implementation-branch limit permits it.
 8. Stop without human notification when no decision is required; request a human only at an explicit gate or true blocker.
 
 Recurring execution must be idempotent at the workflow level. Re-running startup and recovery must not create duplicate branches, pull requests, comments, releases, or destructive actions.
@@ -93,7 +95,12 @@ Promote `develop` to `main` through a reviewed pull request. Every promotion req
 
 ## Pull requests
 
-- Ordinary branches start from `develop` and target `develop`.
+- `main` and `develop` are the only long-lived branches.
+- Every feature, defect, and urgent-fix branch starts from current `develop` and targets `develop`.
+- There is no direct implementation or hotfix route to `main`.
+- Production changes reach `main` only through a reviewed `develop -> main` release promotion.
+- After promotion, synchronize released `main` history back into `develop` when required to keep branch history aligned.
+- Delete temporary implementation branches after merge.
 - Use one issue per PR unless an issue explicitly defines grouped migration work.
 - Draft PRs are preferred until checks and evidence are complete.
 - Every PR states compatibility impact, affected consumers, automated validation, human acceptance-test status, and rollback.
