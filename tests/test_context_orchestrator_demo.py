@@ -42,6 +42,8 @@ class ContextOrchestratorDemoTests(unittest.TestCase):
             self.assertIn("=== ORCHESTRATOR STAGE ===", completed.stdout)
             self.assertIn("Dispatch count: 0", completed.stdout)
             self.assertIn("WOULD_INVOKE", completed.stdout)
+            self.assertIn("company.research", completed.stdout)
+            self.assertIn("not needed: no goal/context trigger matched", completed.stdout)
 
             expected = {
                 "context.yaml",
@@ -59,7 +61,7 @@ class ContextOrchestratorDemoTests(unittest.TestCase):
             )
             self.assertTrue(context_report["handoff"]["allowed"])
             self.assertEqual(0, orchestrator_report["metrics"]["dispatch_count"])
-            self.assertEqual(3, orchestrator_report["metrics"]["selected_capability_count"])
+            self.assertEqual(2, orchestrator_report["metrics"]["selected_capability_count"])
 
             context_yaml = (output_dir / "context.yaml").read_text(encoding="utf-8")
             plan_yaml = (output_dir / "execution-plan.yaml").read_text(encoding="utf-8")
