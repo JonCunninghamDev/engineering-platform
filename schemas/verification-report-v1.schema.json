@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/verification-report-v1.schema.json",
+  "title": "Verification Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "agent", "task_id", "plan_run_id", "status", "checks", "summary", "execution", "handoff"],
+  "properties": {
+    "schema_version": {"const": "verification-report/v1"},
+    "agent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "version", "service_tier"],
+      "properties": {"role": {"const": "verifier"}, "version": {"const": "1.0.0"}, "service_tier": {"const": "basic"}}
+    },
+    "task_id": {"type": "string", "minLength": 1},
+    "plan_run_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["verified", "rejected"]},
+    "checks": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "status", "reason"],
+        "properties": {"name": {"type": "string", "minLength": 1}, "status": {"enum": ["passed", "failed", "unavailable_basic_tier"]}, "reason": {"type": "string", "minLength": 1}}
+      }
+    },
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["change_count", "passed", "failed", "unavailable"],
+      "properties": {"change_count": {"type": "integer", "minimum": 0}, "passed": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}, "unavailable": {"type": "integer", "minimum": 0}}
+    },
+    "execution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository_writes", "candidate_code_executions"],
+      "properties": {"repository_writes": {"const": 0}, "candidate_code_executions": {"const": 0}}
+    },
+    "handoff": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target", "allowed", "artifact"],
+      "properties": {"target": {"const": "reviewer"}, "allowed": {"type": "boolean"}, "artifact": {"const": "verification-report/v1"}}
+    }
+  }
+}
