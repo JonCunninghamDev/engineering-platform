@@ -1,0 +1,281 @@
+name: Reusable Consumer CI
+
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: 'Validation depth: fast skips optional build commands; full runs them.'
+        required: false
+        type: string
+        default: full
+      enable_node:
+        required: false
+        type: boolean
+        default: false
+      enable_python:
+        required: false
+        type: boolean
+        default: false
+      enable_blender:
+        required: false
+        type: boolean
+        default: false
+      node_version:
+        required: false
+        type: string
+        default: '22'
+      python_version:
+        required: false
+        type: string
+        default: '3.14'
+      node_working_directory:
+        required: false
+        type: string
+        default: '.'
+      python_working_directory:
+        required: false
+        type: string
+        default: '.'
+      blender_working_directory:
+        required: false
+        type: string
+        default: '.'
+      node_install_command:
+        required: false
+        type: string
+        default: 'npm ci'
+      node_test_command:
+        required: false
+        type: string
+        default: 'npm test'
+      node_build_command:
+        required: false
+        type: string
+        default: ''
+      python_install_command:
+        required: false
+        type: string
+        default: 'python -m pip install -r requirements.txt'
+      python_test_command:
+        required: false
+        type: string
+        default: "python -m unittest discover -s tests -p 'test_*.py' -v"
+      python_build_command:
+        required: false
+        type: string
+        default: ''
+      install_uv:
+        required: false
+        type: boolean
+        default: false
+      blender_install_command:
+        required: false
+        type: string
+        default: 'sudo apt-get update && sudo apt-get install -y blender'
+      blender_test_command:
+        required: false
+        type: string
+        default: "blender --background --python-expr \"import bpy; print('blender smoke test passed')\""
+      node_cache:
+        required: false
+        type: boolean
+        default: false
+      node_package_manager:
+        required: false
+        type: string
+        default: npm
+      node_cache_dependency_path:
+        required: false
+        type: string
+        default: package-lock.json
+      python_cache:
+        required: false
+        type: boolean
+        default: false
+      python_cache_dependency_path:
+        required: false
+        type: string
+        default: requirements.txt
+      artifact_paths:
+        description: 'Optional newline-delimited build artifact paths uploaded only after a successful full run.'
+        required: false
+        type: string
+        default: ''
+      artifact_retention_days:
+        required: false
+        type: number
+        default: 7
+      timeout_minutes:
+        required: false
+        type: number
+        default: 30
+
+permissions:
+  contents: read
+
+jobs:
+  consumer-ci:
+    name: Platform Consumer CI
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout_minutes }}
+    steps:
+      - name: Check out consumer repository
+        uses: actions/checkout@v4
+
+      - name: Validate reusable workflow inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ inputs.mode }}" in
+            fast|full) ;;
+            *) echo "mode must be fast or full" >&2; exit 2 ;;
+          esac
+          if [[ "${{ inputs.enable_node }}" != "true" && "${{ inputs.enable_python }}" != "true" && "${{ inputs.enable_blender }}" != "true" ]]; then
+            echo "at least one capability must be enabled" >&2
+            exit 2
+          fi
+          if (( ${{ inputs.artifact_retention_days }} < 1 || ${{ inputs.artifact_retention_days }} > 30 )); then
+            echo "artifact_retention_days must be between 1 and 30" >&2
+            exit 2
+          fi
+
+      - name: Set up Node with cache
+        if: ${{ inputs.enable_node && inputs.node_cache }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+          cache: ${{ inputs.node_package_manager }}
+          cache-dependency-path: ${{ inputs.node_cache_dependency_path }}
+
+      - name: Set up Node
+        if: ${{ inputs.enable_node && !inputs.node_cache }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Install Node dependencies
+        if: ${{ inputs.enable_node && inputs.node_install_command != '' }}
+        working-directory: ${{ inputs.node_working_directory }}
+        shell: bash
+        run: ${{ inputs.node_install_command }}
+
+      - name: Run Node tests
+        if: ${{ inputs.enable_node && inputs.node_test_command != '' }}
+        working-directory: ${{ inputs.node_working_directory }}
+        shell: bash
+        run: ${{ inputs.node_test_command }}
+
+      - name: Run Node build
+        if: ${{ inputs.enable_node && inputs.mode == 'full' && inputs.node_build_command != '' }}
+        working-directory: ${{ inputs.node_working_directory }}
+        shell: bash
+        run: ${{ inputs.node_build_command }}
+
+      - name: Set up Python with pip cache
+        if: ${{ inputs.enable_python && inputs.python_cache }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+          cache: pip
+          cache-dependency-path: ${{ inputs.python_cache_dependency_path }}
+
+      - name: Set up Python
+        if: ${{ inputs.enable_python && !inputs.python_cache }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Install uv
+        if: ${{ inputs.enable_python && inputs.install_uv }}
+        shell: bash
+        run: python -m pip install uv
+
+      - name: Install Python dependencies
+        if: ${{ inputs.enable_python && inputs.python_install_command != '' }}
+        working-directory: ${{ inputs.python_working_directory }}
+        shell: bash
+        run: ${{ inputs.python_install_command }}
+
+      - name: Run Python tests
+        if: ${{ inputs.enable_python && inputs.python_test_command != '' }}
+        working-directory: ${{ inputs.python_working_directory }}
+        shell: bash
+        run: ${{ inputs.python_test_command }}
+
+      - name: Run Python build
+        if: ${{ inputs.enable_python && inputs.mode == 'full' && inputs.python_build_command != '' }}
+        working-directory: ${{ inputs.python_working_directory }}
+        shell: bash
+        run: ${{ inputs.python_build_command }}
+
+      - name: Install Blender
+        if: ${{ inputs.enable_blender }}
+        working-directory: ${{ inputs.blender_working_directory }}
+        shell: bash
+        run: ${{ inputs.blender_install_command }}
+
+      - name: Run Blender validation
+        if: ${{ inputs.enable_blender && inputs.blender_test_command != '' }}
+        working-directory: ${{ inputs.blender_working_directory }}
+        shell: bash
+        run: ${{ inputs.blender_test_command }}
+
+      - name: Record bounded build metadata
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          mkdir -p .platform-ci
+          {
+            echo "mode=${{ inputs.mode }}"
+            echo "node_enabled=${{ inputs.enable_node }}"
+            echo "python_enabled=${{ inputs.enable_python }}"
+            echo "blender_enabled=${{ inputs.enable_blender }}"
+            echo "commit=${GITHUB_SHA}"
+            if command -v node >/dev/null 2>&1; then node --version; fi
+            if command -v python >/dev/null 2>&1; then python --version; fi
+            if command -v blender >/dev/null 2>&1; then blender --version | head -n 1; fi
+          } > .platform-ci/build-metadata.txt
+
+      - name: Capture bounded failure diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          mkdir -p .platform-ci
+          {
+            echo "git_status:"
+            git status --short
+            echo
+            echo "tool_versions:"
+            if command -v node >/dev/null 2>&1; then node --version; fi
+            if command -v npm >/dev/null 2>&1; then npm --version; fi
+            if command -v python >/dev/null 2>&1; then python --version; fi
+            if command -v uv >/dev/null 2>&1; then uv --version; fi
+            if command -v blender >/dev/null 2>&1; then blender --version | head -n 1; fi
+          } > .platform-ci/failure-diagnostics.txt
+
+      - name: Upload build metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-ci-metadata
+          path: .platform-ci/build-metadata.txt
+          retention-days: ${{ inputs.artifact_retention_days }}
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-ci-diagnostics
+          path: .platform-ci/failure-diagnostics.txt
+          retention-days: ${{ inputs.artifact_retention_days }}
+
+      - name: Upload consumer build artifacts
+        if: ${{ success() && inputs.mode == 'full' && inputs.artifact_paths != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-consumer-build
+          path: ${{ inputs.artifact_paths }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.artifact_retention_days }}
