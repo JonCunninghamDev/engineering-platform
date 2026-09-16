@@ -2,64 +2,44 @@
 
 A governed, agent-native engineering platform for running software work through explicit context, planning, capability, policy, testing, review, observability, and human-decision boundaries.
 
-**Published platform version:** `0.1.0`  
-**Published release tag:** `v0.1.0`
+**Expected platform version:** `1.0.0`  
+**Expected release tag:** `v1.0.0`
 
-`main` is the released/production source of truth. `develop` is the current integration branch and may contain capabilities that are not yet part of the published `v0.1.0` release.
+`main` is the released/production source of truth. `develop` is the current integration branch. During release preparation, `VERSION` and this metadata describe the release being prepared; the version is published only after the matching verified GitHub release exists on `main`.
 
 This repository is the **authoring source of truth** for reusable Engineering Platform contracts, schemas, standards, policy, agent implementations, tests, workflows, and release governance.
 
-The long-term goal is not a collection of coding bots. The platform is intended to provide a reusable operating system for governed engineering agents that can work across different repositories, tools, and engagements while keeping authority, evidence, and human accountability explicit.
+## Current stable contract
 
-## Current development state
+The v1.0 development line provides a governed agent pipeline with explicit, inspectable boundaries:
 
-The current development line includes the first agent-native vertical slices:
+- **Basic Context Agent** validates and normalizes supplied context, preserves provenance, and emits `context.yaml`.
+- **Basic Orchestrator Agent** accepts ready context, selects minimum sufficient capabilities, builds an acyclic dependency graph, and emits `execution-plan.yaml`.
+- **Basic Builder Agent** accepts explicit Builder authority, enforces file scope, computes deterministic diffs and hashes, and emits a zero-write `change-set.yaml` proposal.
+- **Basic Verifier Agent** validates Builder evidence against its assigned scope and verification contract and emits deterministic verification evidence.
+- **Tier-aware behavior** reports active service tier, autonomy, execution mode, and locked higher-tier capabilities rather than pretending unavailable capabilities executed.
+- **Consumer-agnostic policy and CI contracts** support pinned external adoption without embedding consumer identity or product architecture in this repository.
+- **Two-long-lived-branch delivery** keeps `main` as production and `develop` as integration, with temporary work branches and explicit release governance.
 
-- **Basic Context Agent** — validates and normalizes supplied context, identifies missing or conflicting required information, preserves provenance, and emits an inspectable `context.yaml` handoff.
-- **Basic Orchestrator Agent** — accepts only a ready Context Agent handoff, inspects a machine-readable capability registry, selects the minimum sufficient capabilities for the stated goal, builds an acyclic dependency graph, explains selected and skipped capabilities, and emits `execution-plan.yaml`.
-- **Basic Builder Agent** — accepts an explicit Builder assignment linked to a selected Builder capability, enforces allowed/protected file scope, computes deterministic unified diffs and content hashes, and emits a zero-write `change-set.yaml` proposal for downstream verification.
-- **Tier-aware demo behavior** — agent runs explicitly report active service tier, autonomy, and execution mode and show higher-tier capabilities as locked rather than pretending they executed.
-- **Two-long-lived-branch delivery model** — `main` is production, `develop` is integration, and all implementation work uses temporary branches created from current `develop` and merged back into `develop` before release promotion.
-
-The Basic Orchestrator intentionally does **not** dispatch downstream agents. A Builder `builder-task/v1` assignment is therefore explicit authority separate from an Orchestrator `WOULD_INVOKE` plan row. Basic Builder intentionally does **not** mutate a repository; governed workspace writes and validation remain planned higher-tier capabilities.
+The Basic Orchestrator intentionally plans rather than silently dispatching downstream authority. Builder and Verifier handoffs remain explicit so planning, assignment, proposed change, and verification are independently inspectable.
 
 ## Agent operating model
 
-The platform separates four dimensions that must not be conflated:
+The platform separates role, service tier, autonomy, and execution mode. An effective agent is composed from a role, capability set, tier, autonomy policy, and execution mode rather than from a separate prompt for every product package.
 
-1. **Role** — what kind of work the agent performs, such as Context, Orchestrator, Builder, Verifier, Reviewer, Architect, or Operations.
-2. **Service tier** — how much of that role's responsibility is implemented, currently modeled as Basic, Managed, and Full.
-3. **Autonomy** — what the agent may decide or execute without approval.
-4. **Execution mode** — whether the run is demo, test, or production.
-
-An effective agent is therefore composed from a role, capability set, tier, autonomy policy, and execution mode rather than from a separate prompt for every product package.
-
-For example:
-
-```text
-Context Agent
-  tier: BASIC
-  autonomy: ADVISORY
-  mode: DEMO
-```
-
-may normalize supplied context and produce a handoff, while Managed and Full context-retrieval or maintenance capabilities remain visibly locked.
+Current roles include Context, Orchestrator, Builder, and Verifier. Additional roles can be introduced only through governed platform changes.
 
 ## Current agent flow
-
-The implemented development flow is:
 
 ```text
 Human / system context
         |
         v
 Context Agent
-BASIC | tier-aware | demo-capable
         |
         | context.yaml
         v
 Orchestrator Agent
-BASIC | planner only
         |
         | execution-plan.yaml
         v
@@ -68,88 +48,35 @@ Explicit Builder assignment
         |
         v
 Builder Agent
-BASIC | proposal only
         |
         | change-set.yaml
         v
 Verifier Agent
-(next vertical slice)
+        |
+        | deterministic verification evidence
+        v
+Human / governed downstream decision
 ```
 
-The Orchestrator plans against a machine-readable capability registry. It records why a capability was selected, why a relevant capability was skipped, dependency ordering, provider role, risk, tier availability, and human-gate requirements.
-
-The Builder requires a separate explicit assignment, validates that the assigned capability is selected for provider `builder`, enforces file scope, and produces deterministic diff/hash evidence without mutating the workspace.
-
-This keeps planning, assignment, implementation proposal, and future verification as distinct inspectable boundaries rather than hidden conversation state.
-
-## Context and handoff contracts
-
-Agent handoffs are first-class versioned artifacts rather than implicit conversation state.
-
-Current contracts include:
-
-- `context-contract/v1` — declares required, recommended, and optional context for a workflow;
-- `context-input/v1` — represents supplied context and provenance;
-- `context-manifest/v1` — records normalized context, readiness, provenance, tier/autonomy/mode, capability evidence, and downstream handoff permission;
-- `capability-registry/v1` — describes available capabilities, providers, dependencies, risk, tier availability, and human-gate requirements;
-- `execution-plan/v1` — records the Orchestrator's selected task graph and planned downstream work;
-- `builder-task/v1` — records explicit Builder assignment, plan linkage, file scope, and host-proposed bounded file changes;
-- `change-set/v1` — records the Builder's deterministic candidate changes, unified diffs, content hashes, zero-write summary, and Verifier handoff;
-- `agent-run-report/v1` — provides machine-readable run evidence for demo tooling and future management interfaces.
-
-The design principle is simple: a downstream agent should be able to determine exactly what it received, where the information came from, what level of processing produced it, and whether the handoff is permitted.
+Agent handoffs are versioned artifacts rather than implicit conversation state. Current contracts cover context, capability registry, execution planning, Builder assignment, change-set evidence, Verifier evidence, engineering policy, and machine-readable run reporting.
 
 ## Demo mode
 
-Demo mode uses the real decision, planning, and evidence logic but stops at consequential execution boundaries.
-
-A demo run should show:
-
-- what the agent received;
-- why it was invoked;
-- active service tier, autonomy, and mode;
-- capabilities used;
-- capabilities available at the active tier but unnecessary;
-- capabilities locked by higher tiers;
-- decisions and reasons;
-- artifacts produced;
-- downstream handoff;
-- actions that **would** execute at a higher permitted level.
-
-Basic Orchestrator demo output reports downstream tasks as `WOULD_INVOKE` and records a dispatch count of zero. Basic Builder demo output reports candidate file actions as `WOULD_WRITE`, emits real diff/hash evidence, and records an actual write count of zero.
-
-## Human Lead and engagement direction
-
-The planned management layer will treat each company, client, internal project, or other work relationship as an isolated **Engagement**.
-
-A future Human Lead Console is expected to provide a consistent drill-down model:
-
-```text
-Engagement
-  -> Stories
-     -> Engineering Run
-        -> Agent execution graph
-           -> Agent evidence / artifacts / decisions
-```
-
-An engagement may define its own approved tools, repositories, communications sources, credentials, coding standards, cloud environment, policies, and agent tiers. Engagement context and credentials must remain isolated; generic platform capabilities may be reused, but confidential engagement data must not cross engagement boundaries without explicit authorization.
-
-The console itself is not implemented in this repository. The contracts and telemetry produced here are intended to make such a UI possible without scraping prose or reconstructing hidden model state.
+Demo mode uses real decision, planning, and evidence logic but stops at consequential execution boundaries. A demo run should show received context, invocation reason, active tier/autonomy/mode, capabilities used or locked, decisions and reasons, artifacts produced, downstream handoff, and actions that would execute at a higher permitted level.
 
 ## Agent startup and release verification
 
-The `VERSION` file declares the expected published steering version. A version is published only when the **latest non-draft, non-prerelease GitHub release** exists with the matching `v<VERSION>` tag and the tagged commit is reachable from `main`.
+`VERSION` declares the expected platform version. A version is published only when the latest non-draft, non-prerelease GitHub release exists with matching `v<VERSION>` tag and the tagged commit is reachable from `main`.
 
 When an agent starts work in this repository it must:
 
-1. Verify repository access with a real GitHub operation and confirm the default branch is `main`.
-2. Read this README first.
-3. Read `VERSION` and form the expected release tag as `v<VERSION>`.
-4. Query the latest non-draft, non-prerelease GitHub release and verify that its tag matches the expected tag and its tagged commit is reachable from `main`.
-5. Read `AGENTS.md`, `agent/operating-contract-v1.md`, `docs/task-management.md`, and other steering required for the active task.
-6. Inspect current issues, pull requests, CI, reviews, and branch state.
-7. Confirm `develop` contains all current `main` history before starting implementation work.
-8. Continue the deterministic active task rather than relying on conversational memory.
+1. Verify repository access and confirm the default branch is `main`.
+2. Read this README and `VERSION`.
+3. Verify the expected release against GitHub release metadata when operating from released `main`.
+4. Read `AGENTS.md`, `agent/operating-contract-v1.md`, `docs/task-management.md`, and steering required for the active task.
+5. Inspect current issues, pull requests, CI, reviews, and branch state.
+6. Confirm `develop` contains all current `main` history before ordinary implementation work.
+7. Continue the deterministic active task rather than relying on conversational memory.
 
 Branch-local files may guide development, but they are not consumer-authoritative until released through `main`.
 
@@ -158,85 +85,59 @@ Branch-local files may guide development, but they are not consumer-authoritativ
 The repository uses exactly two long-lived branches:
 
 - `main` — released/production state;
-- `develop` — current integration state and the base for all implementation work.
+- `develop` — current integration state and base for implementation work.
 
-Every feature, defect, or urgent production fix follows the same route:
+Ordinary implementation follows:
 
 ```text
-develop
-   |
-   v
-temporary implementation branch
-   |
-   | PR + tests + Platform CI
-   v
-develop
-   |
-   | reviewed Release: PR + human approval
-   v
-main
+develop -> temporary implementation branch -> PR + tests + Platform CI -> develop
+```
+
+Release preparation follows the separately governed metadata route:
+
+```text
+develop -> release/X.Y.Z -> Prepare Release: PR + Platform CI -> develop
+```
+
+Production promotion remains:
+
+```text
+develop -> reviewed Release: PR + explicit human approval -> main
 ```
 
 Rules:
 
-1. Synchronize current `main` history into `develop` before ordinary implementation work when needed.
-2. Create every implementation branch from current `develop`.
-3. Target every implementation PR back to `develop`.
-4. Add or update automated tests for changed behavior.
-5. Run the full suite before considering the change ready for review:
+1. Synchronize current `main` history into `develop` before ordinary implementation when needed.
+2. Create implementation and release-preparation branches from current `develop`.
+3. Target work back to `develop` and require the route-specific policy evidence.
+4. Add or update automated tests for changed executable behavior. Metadata-only release preparation does not require artificial test edits.
+5. Run the full suite before considering executable changes ready:
 
    ```bash
    python -m unittest discover -s tests -p 'test_*.py' -v
    ```
 
-6. Platform CI validates route policy, test-change evidence, repository structure, the full Python suite, Python compilation, shell syntax, JSON, and YAML.
-7. Production changes reach `main` only through a `develop -> main` `Release:` PR with required human approval.
-8. Synchronize approved `main` release history back into `develop` when required to keep integration current.
-9. Delete temporary implementation branches after merge.
+6. Platform CI validates route policy, required test evidence, repository structure, Python tests and compilation, shell syntax, JSON, and YAML.
+7. Production reaches `main` only through a `develop -> main` `Release:` PR with explicit human approval.
+8. Synchronize approved `main` release history back into `develop` when required.
+9. Delete temporary branches after merge.
 10. There is no separate direct-to-`main` hotfix route.
 
 ## Implementation authority and human gates
 
-Agents may make bounded, reversible, local, testable engineering decisions inside an accepted issue when repository policy permits them.
-
-Human approval remains required for consequential boundaries including shared agent authority, public policy/schema changes with consumer impact, reusable workflow behavior, credentials and security authority, destructive migrations, backward-incompatible contracts, ambiguous cross-repository risk, and every `develop -> main` release promotion.
+Agents may make bounded, reversible, local, testable engineering decisions inside accepted work when repository policy permits them. Human approval remains required for consequential boundaries including shared agent authority, public policy/schema changes with consumer impact, reusable workflow behavior, credentials/security authority, destructive migrations, backward-incompatible contracts, ambiguous cross-repository risk, and every `develop -> main` release promotion.
 
 Automated tests are evidence, not a substitute for human acceptance of consequential changes.
 
 ## What belongs in this repository
 
-Centralize reusable engineering mechanics and contracts:
+Centralize reusable engineering mechanics and contracts: agent operating contracts, context/capability/handoff/run/policy schemas, deterministic task and delivery rules, reusable CI/CD, common testing/security/observability standards, service-tier definitions, telemetry/evidence contracts, templates, and adoption guidance.
 
-- agent operating contracts and specialized role contracts;
-- context, capability, handoff, run, and policy schemas;
-- deterministic task and delivery rules;
-- reusable CI/CD workflows and actions;
-- common testing, security, observability, and delivery standards;
-- capability and service-tier definitions;
-- telemetry and evidence contracts;
-- reusable templates and adoption guidance.
-
-Keep product- and engagement-specific truth in consumer repositories or engagement configuration:
-
-- product purpose and business rules;
-- application architecture and domain-specific acceptance criteria;
-- customer/employer credentials and confidential context;
-- environment-specific ownership and permissions;
-- repository-specific risk exceptions;
-- visual/product decisions that are not reusable platform policy.
+Keep product- and engagement-specific truth in consumer repositories: product purpose, application architecture, customer/employer credentials, environment-specific ownership, repository-specific exceptions, visual/product decisions, and migration work.
 
 ## Adoption model
 
-A consumer repository should pin a verified Engineering Platform release rather than depend on the live platform repository during every run.
-
-A consumer can:
-
-1. pin a released platform tag and immutable commit;
-2. keep concise repository-local steering and product truth;
-3. keep required synchronized contracts locally for fast and resilient startup;
-4. invoke reusable workflows by pinned release or immutable SHA;
-5. adopt platform updates through focused, tested pull requests;
-6. remain independently buildable and revertible if this repository is unavailable.
+A consumer repository should pin a verified Engineering Platform release rather than depend on the live platform repository during every run. Consumers can pin a released tag and immutable commit, keep concise repository-local steering and synchronized contracts, invoke reusable workflows by immutable version, adopt updates through focused tested PRs, and remain independently buildable and revertible if this repository is unavailable.
 
 ## Repository layout
 
@@ -255,32 +156,16 @@ scripts/     executable platform agents, validation, and maintenance commands
 
 ## Current roadmap
 
-**Published foundation**
+**v1.0.0 release target**
 
-- `v0.1.0` repository, steering, validation, CI, and release foundation.
+- governed Context -> Orchestrator -> Builder -> Verifier pipeline;
+- deterministic evidence and tier-aware behavior;
+- consumer-agnostic policy, CI, compatibility, and rollback contracts;
+- protected-path and pull-request governance;
+- explicit release preparation and human-approved production promotion.
 
-**Implemented on the current development line**
+**After v1.0.0 publication**
 
-- two-long-lived-branch delivery policy;
-- Basic Context Agent;
-- context and run-report contracts;
-- Basic Orchestrator Agent and capability registry;
-- Basic Builder Agent, explicit assignment, scope enforcement, and deterministic change-set evidence;
-- tier-aware demo behavior and deterministic agent tests.
-
-**Next agent vertical slices**
-
-1. Basic Verifier Agent.
-2. Basic Reviewer Agent.
-3. Basic Architect Agent.
-4. Basic Operations Agent.
-
-**Platform expansion**
-
-- `engineering-policy/v1` and composable permission profiles;
-- Managed and Full service tiers;
-- governed downstream dispatch and runtime task-state management;
-- telemetry for wall time, agent execution, human attention, cost, rework, and accepted outcomes;
-- engagement isolation contracts;
-- Human Lead Console integration;
-- consumer workflows such as Career Ops / Find Me a Job.
+1. Validate the external consumer adoption path in issue #5.
+2. Gather operating evidence and a single-agent baseline from a real consumer.
+3. Add measured multi-agent scaling under issue #27 only after those dependencies are satisfied.
