@@ -13,14 +13,15 @@ The long-term goal is not a collection of coding bots. The platform is intended 
 
 ## Current development state
 
-The current `develop` line includes the first agent-native vertical slices:
+The current development line includes the first agent-native vertical slices:
 
 - **Basic Context Agent** — validates and normalizes supplied context, identifies missing or conflicting required information, preserves provenance, and emits an inspectable `context.yaml` handoff.
 - **Basic Orchestrator Agent** — accepts only a ready Context Agent handoff, inspects a machine-readable capability registry, selects the minimum sufficient capabilities for the stated goal, builds an acyclic dependency graph, explains selected and skipped capabilities, and emits `execution-plan.yaml`.
+- **Basic Builder Agent** — accepts an explicit Builder assignment linked to a selected Builder capability, enforces allowed/protected file scope, computes deterministic unified diffs and content hashes, and emits a zero-write `change-set.yaml` proposal for downstream verification.
 - **Tier-aware demo behavior** — agent runs explicitly report active service tier, autonomy, and execution mode and show higher-tier capabilities as locked rather than pretending they executed.
 - **Two-long-lived-branch delivery model** — `main` is production, `develop` is integration, and all implementation work uses temporary branches created from current `develop` and merged back into `develop` before release promotion.
 
-The Basic Orchestrator intentionally does **not** dispatch downstream agents. Live dispatch, runtime task-state management, retries, replanning, parallel execution, and human-gate routing are planned higher-tier orchestration capabilities.
+The Basic Orchestrator intentionally does **not** dispatch downstream agents. A Builder `builder-task/v1` assignment is therefore explicit authority separate from an Orchestrator `WOULD_INVOKE` plan row. Basic Builder intentionally does **not** mutate a repository; governed workspace writes and validation remain planned higher-tier capabilities.
 
 ## Agent operating model
 
@@ -62,13 +63,24 @@ BASIC | planner only
         |
         | execution-plan.yaml
         v
-Would-invoke downstream capabilities
-(no Basic-tier dispatch)
+Explicit Builder assignment
+(builder-task/v1)
+        |
+        v
+Builder Agent
+BASIC | proposal only
+        |
+        | change-set.yaml
+        v
+Verifier Agent
+(next vertical slice)
 ```
 
 The Orchestrator plans against a machine-readable capability registry. It records why a capability was selected, why a relevant capability was skipped, dependency ordering, provider role, risk, tier availability, and human-gate requirements.
 
-This makes orchestration inspectable and prevents the default behavior of invoking every available agent for every task.
+The Builder requires a separate explicit assignment, validates that the assigned capability is selected for provider `builder`, enforces file scope, and produces deterministic diff/hash evidence without mutating the workspace.
+
+This keeps planning, assignment, implementation proposal, and future verification as distinct inspectable boundaries rather than hidden conversation state.
 
 ## Context and handoff contracts
 
@@ -81,13 +93,15 @@ Current contracts include:
 - `context-manifest/v1` — records normalized context, readiness, provenance, tier/autonomy/mode, capability evidence, and downstream handoff permission;
 - `capability-registry/v1` — describes available capabilities, providers, dependencies, risk, tier availability, and human-gate requirements;
 - `execution-plan/v1` — records the Orchestrator's selected task graph and planned downstream work;
+- `builder-task/v1` — records explicit Builder assignment, plan linkage, file scope, and host-proposed bounded file changes;
+- `change-set/v1` — records the Builder's deterministic candidate changes, unified diffs, content hashes, zero-write summary, and Verifier handoff;
 - `agent-run-report/v1` — provides machine-readable run evidence for demo tooling and future management interfaces.
 
 The design principle is simple: a downstream agent should be able to determine exactly what it received, where the information came from, what level of processing produced it, and whether the handoff is permitted.
 
 ## Demo mode
 
-Demo mode uses the real decision and planning logic but stops at consequential execution boundaries.
+Demo mode uses the real decision, planning, and evidence logic but stops at consequential execution boundaries.
 
 A demo run should show:
 
@@ -102,7 +116,7 @@ A demo run should show:
 - downstream handoff;
 - actions that **would** execute at a higher permitted level.
 
-Basic Orchestrator demo output therefore reports downstream tasks as `WOULD_INVOKE` and records a dispatch count of zero.
+Basic Orchestrator demo output reports downstream tasks as `WOULD_INVOKE` and records a dispatch count of zero. Basic Builder demo output reports candidate file actions as `WOULD_WRITE`, emits real diff/hash evidence, and records an actual write count of zero.
 
 ## Human Lead and engagement direction
 
@@ -120,7 +134,7 @@ Engagement
 
 An engagement may define its own approved tools, repositories, communications sources, credentials, coding standards, cloud environment, policies, and agent tiers. Engagement context and credentials must remain isolated; generic platform capabilities may be reused, but confidential engagement data must not cross engagement boundaries without explicit authorization.
 
-The console itself is not implemented in this repository yet. The contracts and telemetry produced here are intended to make such a UI possible without scraping prose or reconstructing hidden model state.
+The console itself is not implemented in this repository. The contracts and telemetry produced here are intended to make such a UI possible without scraping prose or reconstructing hidden model state.
 
 ## Agent startup and release verification
 
@@ -251,15 +265,15 @@ scripts/     executable platform agents, validation, and maintenance commands
 - Basic Context Agent;
 - context and run-report contracts;
 - Basic Orchestrator Agent and capability registry;
+- Basic Builder Agent, explicit assignment, scope enforcement, and deterministic change-set evidence;
 - tier-aware demo behavior and deterministic agent tests.
 
 **Next agent vertical slices**
 
-1. Basic Builder Agent.
-2. Basic Verifier Agent.
-3. Basic Reviewer Agent.
-4. Basic Architect Agent.
-5. Basic Operations Agent.
+1. Basic Verifier Agent.
+2. Basic Reviewer Agent.
+3. Basic Architect Agent.
+4. Basic Operations Agent.
 
 **Platform expansion**
 

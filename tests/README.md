@@ -12,6 +12,7 @@ Tests should cover both accepted and rejected behavior. A prose rule is incomple
 - `test_agent_steering_scenarios.py` verifies the required autonomous, recovery, and human-gate decisions in `fixtures/agent-steering-scenarios-v1.json`.
 - `test_context_agent.py` verifies Basic Context Agent readiness, missing required context, explicit contradiction detection, strict service-tier boundaries, demo evidence, and `context.yaml` / run-report artifact generation using `fixtures/context-agent/`.
 - `test_orchestrator_agent.py` verifies Basic Orchestrator context validation, minimum capability selection, dependency ordering, cycle rejection, skipped-capability explanations, strict service-tier boundaries, zero dispatch, demo evidence, and execution-plan artifact generation using `fixtures/orchestrator/`.
+- `test_builder_agent.py` verifies Basic Builder explicit assignment, execution-plan linkage, scope/protected-path enforcement, traversal and delete rejection, deterministic diff/hash evidence, strict service-tier boundaries, zero-write demo behavior, and change-set artifact generation using `fixtures/builder/`.
 
 Run the full Python test suite with:
 

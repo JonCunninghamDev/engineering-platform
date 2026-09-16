@@ -1,0 +1,46 @@
+{
+  "schema_version": "execution-plan/v1",
+  "run": {
+    "id": "orchestrator-builder-001",
+    "created_at": "2026-09-16T00:00:00Z"
+  },
+  "agent": {
+    "role": "orchestrator",
+    "version": "1.0.0",
+    "service_tier": "basic",
+    "autonomy": "advisory",
+    "mode": "demo"
+  },
+  "workflow": "engineering-change",
+  "goal": "Add a greeting module and update documentation.",
+  "planning": {
+    "strategy": "minimum_sufficient_capabilities",
+    "selected_count": 1,
+    "dispatch_count": 0,
+    "selected": [
+      {
+        "sequence": 1,
+        "capability": "engineering.implement",
+        "provider": "builder",
+        "dependencies": [],
+        "risk": "low",
+        "human_gate": false,
+        "action": "WOULD_INVOKE",
+        "reason": "goal/context matched capability trigger",
+        "inputs": [
+          "implementation_task"
+        ],
+        "outputs": [
+          "change_set"
+        ]
+      }
+    ],
+    "skipped": []
+  },
+  "handoff": {
+    "target": "execution-runtime",
+    "artifact": "execution-plan.yaml",
+    "allowed": true,
+    "execution_status": "planned_not_dispatched"
+  }
+}
