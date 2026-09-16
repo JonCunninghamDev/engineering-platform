@@ -6,6 +6,8 @@ The engineering platform centralizes reusable mechanics without becoming a runti
 
 A consumer repository must remain understandable, buildable, and recoverable from its own checked-in files.
 
+Compatibility and upgrade rules are defined in [`docs/compatibility.md`](compatibility.md). Public surfaces are inventoried in `standards/platform-compatibility-v1.json`.
+
 ## Consumer hierarchy
 
 Agents resolve instructions in this order:
@@ -34,23 +36,22 @@ If any check fails, do not treat the candidate platform files as published share
 
 ## Pinning
 
-Consumers identify the adopted platform release in a local manifest, eventually standardized by `engineering-policy/v1`.
+`engineering-policy/v1` provides the machine-readable platform pin, profile selection, branch roles, capabilities, review/delivery gates, permissions, protected paths, validation stages, budgets, and compatibility metadata for consumers that adopt a release containing that schema.
 
-Until that schema is released, use a minimal file such as:
+A consumer pin records at minimum:
 
 ```yaml
 platform:
   repository: JonCunninghamDev/engineering-platform
-  version: v0.1.0
+  version: vX.Y.Z
   commit: <full-release-commit-sha>
-  operating_contract: agent/operating-contract-v1.md
-  delivery_route_validator: scripts/validate-delivery-route.py
-profile: node-python-blender
+profiles:
+  - node-python
 ```
 
 Reusable workflows should be invoked by a verified release tag or full commit SHA. Production-critical consumers should prefer full SHA pinning and upgrade through a pull request.
 
-A contract filename such as `operating-contract-v1.md` is the contract interface version, not proof that a candidate branch is released. Consumer authority comes from the verified platform release tag plus immutable commit. Additive changes can remain within a compatible contract interface only when they do not broaden authority or break consumer expectations; incompatible contract behavior requires a new contract interface version and release notes.
+A contract filename such as `operating-contract-v1.md` is the contract interface version, not proof that a candidate branch is released. Consumer authority comes from the verified platform release tag plus immutable commit. Additive changes can remain within a compatible contract interface only when they do not broaden authority or break consumer expectations; incompatible contract behavior follows `docs/compatibility.md` and requires the appropriate platform version boundary and migration evidence.
 
 ## Local synchronized steering
 
@@ -66,12 +67,15 @@ Agents should not fetch the platform repository during every run merely to recon
 ## Update process
 
 1. A verified platform release becomes available.
-2. Automation or an agent opens a consumer upgrade PR.
-3. The PR updates the tag, immutable commit, synchronized local files, and any copied validator/fixtures.
-4. Consumer CI validates its complete required suite, including local route scenarios when adopted.
-5. Review confirms product-specific exceptions remain intact.
-6. Human acceptance is performed when the change affects consequential consumer behavior.
-7. Merge only after rollback is clear.
+2. Automation or an agent opens a consumer upgrade PR using `templates/platform-upgrade.md` or equivalent evidence.
+3. The PR records the current and target release/tag/immutable commit and the compatibility impact.
+4. The PR updates the platform pin, synchronized local files, and any copied validators/fixtures.
+5. Migration-required public surfaces are handled using the release migration documentation.
+6. Consumer CI validates its complete required suite, including local route scenarios when adopted.
+7. Review confirms product-specific exceptions remain intact.
+8. Merge only after rollback to the previous immutable pin is clear.
+
+A consumer upgrade PR must identify affected public surfaces, test evidence, and rollback even when the compatibility impact is `compatible`.
 
 ## Local overrides
 
@@ -100,6 +104,8 @@ Reusable workflow failures should identify the pinned platform release and expos
 `JonCunninghamDev/low-poly-character-studio` will be the first consumer after:
 
 - the shared steering baseline is released and verified;
-- shared delivery policy and `engineering-policy/v1` are released;
-- the reusable `node-python-blender` workflow is validated;
-- its active final-GLB issue has merged and synchronized through the existing delivery path.
+- shared delivery policy, `engineering-policy/v1`, and the compatibility contract are released;
+- the reusable `node-python-blender` workflow is included in that verified release;
+- its final-GLB prerequisite issue has merged and remains in current `develop` history.
+
+Do not pin the first consumer to unreleased platform `develop` state merely because an immutable development commit exists. The first adoption should prove the release/verification/rollback path that later consumers will rely on.
