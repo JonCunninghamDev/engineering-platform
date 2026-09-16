@@ -17,5 +17,7 @@ Versioned machine-readable contracts belong here.
 - `platform-compatibility-v1.schema.json` defines the public-surface inventory, pre-1.0/stable versioning rules, workflow/profile compatibility metadata, and machine-readable deprecation lifecycle.
 - `architecture-decision-v1.schema.json` defines stable ADR identity, status, rationale, consequences, supersession, and linked executable-rule requirements.
 - `architecture-rule-registry-v1.schema.json` defines the bidirectional registry from architecture rules to governing ADRs, executable validators, tests, and repair guidance.
+- `validation-capability-registry-v1.schema.json` defines repository-agnostic browser, HTTP, and container validation interfaces plus tool-swappable implementation guidance.
+- `validation-capability-evidence-v1.schema.json` defines observable validation results, including attempts, retry counts, duration, configured/consumed budgets, exhaustion dimension, and per-attempt process evidence.
 
 Public schema compatibility is governed by `docs/compatibility.md` and `standards/platform-compatibility-v1.json`. Breaking schema changes must use the appropriate release boundary and migration evidence rather than silently modifying a published interface.

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/validation-capability-evidence-v1.schema.json",
+  "title": "Validation Capability Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capability",
+    "category",
+    "implementation",
+    "status",
+    "duration_ms",
+    "attempts",
+    "retry_count",
+    "command",
+    "budget",
+    "attempt_results"
+  ],
+  "properties": {
+    "schema_version": {"const": "validation-capability-evidence/v1"},
+    "capability": {"type": "string", "minLength": 1},
+    "category": {"enum": ["browser_e2e", "http_contract", "container_integration"]},
+    "implementation": {"type": "string", "minLength": 1},
+    "status": {"enum": ["passed", "test_failed", "budget_exhausted", "configuration_error"]},
+    "duration_ms": {"type": "integer", "minimum": 0},
+    "attempts": {"type": "integer", "minimum": 0},
+    "retry_count": {"type": "integer", "minimum": 0},
+    "command": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limits", "consumption", "exhausted_dimension"],
+      "properties": {
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_steps": {"type": ["integer", "null"], "minimum": 1},
+            "max_elapsed_minutes": {"type": ["number", "null"], "exclusiveMinimum": 0},
+            "max_retries": {"type": ["integer", "null"], "minimum": 0},
+            "max_cost_usd": {"type": ["number", "null"], "minimum": 0}
+          }
+        },
+        "consumption": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["steps", "elapsed_minutes", "retries", "cost_usd"],
+          "properties": {
+            "steps": {"type": "integer", "minimum": 0},
+            "elapsed_minutes": {"type": "number", "minimum": 0},
+            "retries": {"type": "integer", "minimum": 0},
+            "cost_usd": {"type": "number", "minimum": 0}
+          }
+        },
+        "exhausted_dimension": {
+          "type": ["string", "null"],
+          "enum": [null, "max_steps", "max_elapsed_minutes", "max_retries", "max_cost_usd"]
+        }
+      }
+    },
+    "attempt_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attempt", "status", "return_code", "duration_ms", "stdout", "stderr"],
+        "properties": {
+          "attempt": {"type": "integer", "minimum": 1},
+          "status": {"enum": ["passed", "failed", "budget_exhausted"]},
+          "return_code": {"type": ["integer", "null"]},
+          "duration_ms": {"type": "integer", "minimum": 0},
+          "stdout": {"type": "string"},
+          "stderr": {"type": "string"}
+        }
+      }
+    }
+  }
+}

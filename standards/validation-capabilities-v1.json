@@ -1,0 +1,79 @@
+{
+  "schema_version": "validation-capability-registry/v1",
+  "capabilities": [
+    {
+      "id": "test.browser_e2e",
+      "category": "browser_e2e",
+      "description": "Exercise a user-facing web interface through a real browser without prescribing product routes, selectors, or application architecture.",
+      "interface": "browser",
+      "requirements": ["A repository-owned browser test command and any required service startup belong in the consumer repository."],
+      "implementations": [
+        {
+          "name": "Playwright",
+          "ecosystem": "Node.js or Python",
+          "guidance": "Recommended example for browser E2E because it supports modern browsers, traces, screenshots, and deterministic headless execution.",
+          "example_command": "npx playwright test"
+        },
+        {
+          "name": "Selenium/WebDriver",
+          "ecosystem": "multi-language",
+          "guidance": "Use when the consumer already owns WebDriver-based tests or needs a different browser-driver ecosystem."
+        },
+        {
+          "name": "repository-defined browser runner",
+          "ecosystem": "any",
+          "guidance": "Any command is valid when it satisfies the browser capability and emits a process exit status suitable for validation evidence."
+        }
+      ]
+    },
+    {
+      "id": "test.http_contract",
+      "category": "http_contract",
+      "description": "Exercise HTTP request/response contracts against a real or controlled service endpoint without prescribing service architecture.",
+      "interface": "http",
+      "requirements": ["The consumer owns endpoint configuration, fixtures, credentials, and contract assertions."],
+      "implementations": [
+        {
+          "name": "Hurl",
+          "ecosystem": "CLI",
+          "guidance": "Recommended example for concise executable HTTP request/response contracts.",
+          "example_command": "hurl --test tests/http/*.hurl"
+        },
+        {
+          "name": "Schemathesis or OpenAPI-driven runner",
+          "ecosystem": "Python or CLI",
+          "guidance": "Use when validation should derive cases from an API schema rather than hand-authored request files."
+        },
+        {
+          "name": "repository-defined HTTP runner",
+          "ecosystem": "any",
+          "guidance": "Any command is valid when it exercises the intended HTTP contract and returns a deterministic process result."
+        }
+      ]
+    },
+    {
+      "id": "test.container_integration",
+      "category": "container_integration",
+      "description": "Exercise integration behavior against disposable containerized dependencies such as databases, queues, or service doubles without prescribing a specific product topology.",
+      "interface": "container",
+      "requirements": ["A compatible local/container runtime must be available to the consumer execution environment."],
+      "implementations": [
+        {
+          "name": "Testcontainers",
+          "ecosystem": "multi-language",
+          "guidance": "Recommended example when tests should create and dispose dependency containers programmatically."
+        },
+        {
+          "name": "Docker Compose or compatible compose runner",
+          "ecosystem": "CLI",
+          "guidance": "Use when the repository already models integration dependencies declaratively and owns lifecycle cleanup."
+        },
+        {
+          "name": "repository-defined container runner",
+          "ecosystem": "any",
+          "guidance": "Any command is valid when container lifecycle is bounded, cleanup is reliable, and test exit status is deterministic."
+        }
+      ]
+    }
+  ]
+}

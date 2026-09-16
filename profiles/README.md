@@ -11,20 +11,22 @@ Capability primitives are independent building blocks:
 - `capability.node` -> `runtime.node`, `test.node`
 - `capability.python` -> `runtime.python`, `test.python`
 - `capability.blender` -> `runtime.blender`, `test.blender`
+- `capability.browser-e2e` -> `runtime.browser`, `test.browser_e2e`
+- `capability.http-contract` -> `runtime.http_client`, `test.http_contract`
+- `capability.container-integration` -> `runtime.container`, `test.container_integration`
 
-Compositions reference those primitives instead of duplicating them:
+The three integration-validation primitives are opt-in independently. Selecting browser validation does not imply HTTP or container validation, and none of them prescribe a particular product architecture or test framework. Tool guidance lives in `standards/validation-capabilities-v1.json`.
+
+Compositions reference primitives instead of duplicating them:
 
 - `node-python` includes `capability.node` and `capability.python`
 - `node-python-blender` includes `node-python` and `capability.blender`
 
-This keeps Blender optional and prevents a Node/Python consumer from inheriting Blender requirements merely because another consumer needs them.
+This keeps Blender and higher-cost integration capabilities optional so a consumer inherits only the toolchain and validation surfaces it explicitly selects.
 
 ## Engineering policy examples
 
-`profiles/examples/` contains generic `engineering-policy/v1` examples for:
-
-- Node/Python consumers;
-- Node/Python/Blender consumers.
+`profiles/examples/` contains generic `engineering-policy/v1` examples for Node/Python and Node/Python/Blender consumers. Consumers may add any validation capability primitive independently when their repository actually provides the corresponding command and environment.
 
 The policy declares the verified platform pin, branch roles, selected profiles, required capabilities, review and delivery gates, permission/risk tiers, protected paths, validation stages, optional execution budgets, local restrictive overrides, explicit exceptions, and compatibility metadata.
 
@@ -63,6 +65,8 @@ An `exception` documents an approved deviation with a reason and an `approval_re
 
 `required_dimensions` identifies only the budget dimensions a host must support for that policy. Unsupported optional dimensions may be reported without making every agent host implement every budget type.
 
+`run_validation_capability.py` supports all four v1 budget dimensions for repository-owned validation commands. It reports `budget_exhausted` separately from `test_failed` and records steps, elapsed time, retries, and accounted cost in structured evidence.
+
 ## Compatibility metadata
 
-Policies and profiles declare their schema interface and minimum platform version. This metadata is deliberately small in v1; issue #16 defines the broader platform upgrade/deprecation contract that consumes it.
+Policies and profiles declare their schema interface and minimum platform version. Broader public-surface compatibility and deprecation behavior is defined by `docs/compatibility.md` and `standards/platform-compatibility-v1.json`.

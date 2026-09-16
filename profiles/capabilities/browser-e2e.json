@@ -1,0 +1,16 @@
+{
+  "schema_version": "repository-profile/v1",
+  "id": "capability.browser-e2e",
+  "version": "1.0.0",
+  "kind": "capability",
+  "description": "Opt-in browser end-to-end validation capability without prescribing a browser framework or product architecture.",
+  "capabilities": {
+    "toolchain": ["runtime.browser"],
+    "tests": ["test.browser_e2e"]
+  },
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}
