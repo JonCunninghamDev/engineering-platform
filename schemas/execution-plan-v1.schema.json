@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/execution-plan-v1.schema.json",
+  "title": "Execution Plan v1",
+  "type": "object",
+  "required": ["schema_version", "run", "agent", "workflow", "goal", "planning", "handoff"],
+  "properties": {
+    "schema_version": {"const": "execution-plan/v1"},
+    "run": {"type": "object"},
+    "agent": {
+      "type": "object",
+      "required": ["role", "version", "service_tier", "autonomy", "mode"],
+      "properties": {
+        "role": {"const": "orchestrator"},
+        "service_tier": {"enum": ["basic", "managed", "full"]},
+        "autonomy": {"enum": ["advisory", "supervised", "policy"]},
+        "mode": {"enum": ["demo", "test", "production"]}
+      }
+    },
+    "workflow": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "planning": {
+      "type": "object",
+      "required": ["strategy", "selected_count", "dispatch_count", "selected", "skipped"],
+      "properties": {
+        "strategy": {"const": "minimum_sufficient_capabilities"},
+        "selected_count": {"type": "integer", "minimum": 1},
+        "dispatch_count": {"const": 0},
+        "selected": {"type": "array", "minItems": 1},
+        "skipped": {"type": "array"}
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "required": ["target", "artifact", "allowed", "execution_status"]
+    }
+  }
+}

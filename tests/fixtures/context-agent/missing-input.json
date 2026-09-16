@@ -1,0 +1,8 @@
+{
+  "schema_version": "context-input/v1",
+  "goal": "Find strong software engineering opportunities.",
+  "context": [
+    {"key": "candidate_profile", "value": "Jon Cunningham verified profile", "source": "human", "confidence": "high"},
+    {"key": "target_role_families", "value": ["AI Platform"], "source": "human", "confidence": "high"}
+  ]
+}

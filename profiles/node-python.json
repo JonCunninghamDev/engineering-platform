@@ -1,0 +1,17 @@
+{
+  "schema_version": "repository-profile/v1",
+  "id": "node-python",
+  "version": "1.0.0",
+  "kind": "composition",
+  "description": "Composition of reusable Node.js and Python capability primitives.",
+  "includes": ["capability.node", "capability.python"],
+  "capabilities": {
+    "toolchain": [],
+    "tests": []
+  },
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}

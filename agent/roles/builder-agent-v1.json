@@ -1,0 +1,73 @@
+{
+  "schema_version": "agent-role/v1",
+  "role": "builder",
+  "version": "1.0.0",
+  "purpose": "Turn an explicit Builder task assignment and host-proposed file contents into a deterministic scope-checked candidate change set.",
+  "dimensions": {
+    "service_tier": [
+      "basic",
+      "managed",
+      "full"
+    ],
+    "autonomy": [
+      "advisory",
+      "supervised",
+      "policy"
+    ],
+    "mode": [
+      "demo",
+      "test",
+      "production"
+    ]
+  },
+  "implemented_tiers": [
+    "basic"
+  ],
+  "tiers": {
+    "basic": {
+      "capabilities": [
+        "validate_task_assignment",
+        "validate_plan_linkage",
+        "enforce_change_scope",
+        "normalize_candidate_changes",
+        "compute_diff_and_hash_evidence",
+        "explain_change_decisions",
+        "produce_change_set"
+      ]
+    },
+    "managed": {
+      "includes": "basic",
+      "status": "planned",
+      "capabilities": [
+        "apply_changes_to_workspace",
+        "run_focused_validation",
+        "bounded_implementation_iteration",
+        "update_task_state"
+      ]
+    },
+    "full": {
+      "includes": "managed",
+      "status": "planned",
+      "capabilities": [
+        "multi_file_refactor_strategy",
+        "dependency_migration",
+        "autonomous_implementation_recovery",
+        "optimize_implementation_sequence"
+      ]
+    }
+  },
+  "input": {
+    "artifact_schemas": [
+      "execution-plan/v1",
+      "builder-task/v1"
+    ],
+    "requires_explicit_assignment": true,
+    "requires_selected_provider": "builder"
+  },
+  "handoff": {
+    "artifact_schema": "change-set/v1",
+    "default_target": "verifier",
+    "basic_mutates_repository": false,
+    "basic_actual_write_count": 0
+  }
+}

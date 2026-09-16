@@ -1,0 +1,55 @@
+{
+  "schema_version": "agent-role/v1",
+  "role": "orchestrator",
+  "version": "1.0.0",
+  "purpose": "Turn a ready Context Agent handoff into an explainable minimum-sufficient execution plan.",
+  "dimensions": {
+    "service_tier": ["basic", "managed", "full"],
+    "autonomy": ["advisory", "supervised", "policy"],
+    "mode": ["demo", "test", "production"]
+  },
+  "implemented_tiers": ["basic"],
+  "tiers": {
+    "basic": {
+      "capabilities": [
+        "validate_context_handoff",
+        "inspect_capability_registry",
+        "select_minimum_capabilities",
+        "construct_dependency_graph",
+        "explain_plan_decisions",
+        "produce_execution_plan"
+      ]
+    },
+    "managed": {
+      "includes": "basic",
+      "status": "planned",
+      "capabilities": [
+        "dispatch_agents",
+        "track_live_task_state",
+        "bounded_retry_and_replan",
+        "parallel_workstream_execution",
+        "route_human_gates"
+      ]
+    },
+    "full": {
+      "includes": "managed",
+      "status": "planned",
+      "capabilities": [
+        "dynamic_capacity_optimization",
+        "cost_risk_aware_scheduling",
+        "continuous_replanning",
+        "self_healing_orchestration"
+      ]
+    }
+  },
+  "input": {
+    "artifact_schema": "context-manifest/v1",
+    "requires_ready_for_orchestration": true,
+    "requires_handoff_allowed": true
+  },
+  "handoff": {
+    "artifact_schema": "execution-plan/v1",
+    "default_target": "execution-runtime",
+    "basic_dispatches_agents": false
+  }
+}

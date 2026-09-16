@@ -1,0 +1,44 @@
+{
+  "schema_version": "fast-feedback/v1",
+  "policy": "engineering-policy.json",
+  "stages": {
+    "after_write": [
+      {
+        "id": "python-compile",
+        "command": ["python", "-m", "compileall", "-q", "scripts", "tests"]
+      }
+    ],
+    "pre_commit": [
+      {
+        "id": "repository-layout",
+        "command": ["python", "scripts/validate-platform-layout.py"]
+      },
+      {
+        "id": "engineering-policy",
+        "command": ["python", "scripts/validate_engineering_policy.py", "--policy", "engineering-policy.json"]
+      },
+      {
+        "id": "public-compatibility",
+        "command": ["python", "scripts/validate_compatibility.py"]
+      },
+      {
+        "id": "consumer-agnostic-boundary",
+        "command": ["python", "scripts/validate_consumer_agnostic.py"]
+      },
+      {
+        "id": "architecture-rules",
+        "command": ["python", "scripts/validate_architecture.py"]
+      },
+      {
+        "id": "python-compile",
+        "command": ["python", "-m", "compileall", "-q", "scripts", "tests"]
+      }
+    ],
+    "completion_gate": [
+      {
+        "id": "full-platform-unit-suite",
+        "command": ["python", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"]
+      }
+    ]
+  }
+}

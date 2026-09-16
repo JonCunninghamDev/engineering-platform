@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/repository-profile-v1.schema.json",
+  "title": "Repository Profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "version", "kind", "description", "capabilities", "compatibility"],
+  "properties": {
+    "schema_version": {"const": "repository-profile/v1"},
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "kind": {"enum": ["capability", "composition"]},
+    "description": {"type": "string", "minLength": 1},
+    "includes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]*$"}
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["toolchain", "tests"],
+      "properties": {
+        "toolchain": {"$ref": "#/$defs/capabilityList"},
+        "tests": {"$ref": "#/$defs/capabilityList"}
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_schema", "profile_schema", "minimum_platform_version"],
+      "properties": {
+        "policy_schema": {"const": "engineering-policy/v1"},
+        "profile_schema": {"const": "repository-profile/v1"},
+        "minimum_platform_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      }
+    }
+  },
+  "$defs": {
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z0-9_-]+)+$"
+    },
+    "capabilityList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/capabilityId"}
+    }
+  }
+}

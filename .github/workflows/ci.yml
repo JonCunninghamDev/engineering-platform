@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  issues: read
 
 concurrency:
   group: platform-ci-${{ github.ref }}
@@ -21,20 +22,73 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Validate repository layout
-        run: python scripts/validate-platform-layout.py
+      - name: Install validation dependencies
+        run: python -m pip install -r requirements-dev.txt
 
-      - name: Compile Python sources
-        run: python -m compileall -q scripts
+      - name: Validate pull request route and test evidence
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed_files="$RUNNER_TEMP/changed-files.txt"
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$changed_files"
+          echo "Changed files:"
+          cat "$changed_files"
+          python scripts/validate-pr-policy.py --changed-files-file "$changed_files"
+
+      - name: Validate protected policy paths
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed_files="$RUNNER_TEMP/changed-files.txt"
+          git diff --name-only "$BASE_SHA" "$HEAD_SHA" > "$changed_files"
+          issue_body="$RUNNER_TEMP/issue-body.md"
+          : > "$issue_body"
+          if [[ "$HEAD_REF" =~ ^(agent|feature|fix)/issue-([0-9]+)(-|$) ]]; then
+            issue_number="${BASH_REMATCH[2]}"
+            gh api "repos/$REPOSITORY/issues/$issue_number" --jq '.body // ""' > "$issue_body"
+          fi
+          python scripts/validate-protected-paths.py \
+            --policy engineering-policy.json \
+            --head "$HEAD_REF" \
+            --base "$BASE_REF" \
+            --changed-files-file "$changed_files" \
+            --issue-body-file "$issue_body"
+
+      - name: Validate repository engineering policy
+        run: python scripts/validate_engineering_policy.py --policy engineering-policy.json
+
+      - name: Run pre-commit fast-feedback stage
+        run: python scripts/run_fast_feedback.py --stage pre_commit --evidence "$RUNNER_TEMP/pre-commit-evidence.json"
+
+      - name: Run completion gate
+        run: python scripts/run_fast_feedback.py --stage completion_gate --evidence "$RUNNER_TEMP/completion-gate-evidence.json"
 
       - name: Validate shell syntax
-        run: find scripts actions tests -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
+        run: find scripts actions tests .githooks -type f -name '*.sh' -o -path '.githooks/pre-commit' | xargs -r -n1 bash -n
 
       - name: Validate JSON syntax
         run: |

@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/engineering-policy-v1.schema.json",
+  "title": "Engineering Policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "platform",
+    "repository",
+    "branches",
+    "profiles",
+    "capabilities",
+    "review",
+    "delivery",
+    "permissions",
+    "protected_paths",
+    "validation",
+    "compatibility"
+  ],
+  "properties": {
+    "schema_version": {"const": "engineering-policy/v1"},
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "version", "commit"],
+      "properties": {
+        "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+        "version": {"type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_id"],
+      "properties": {
+        "policy_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+        "description": {"type": "string", "minLength": 1}
+      }
+    },
+    "branches": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["release", "integration", "temporary_prefixes"],
+      "properties": {
+        "release": {"$ref": "#/$defs/branchName"},
+        "integration": {"$ref": "#/$defs/branchName"},
+        "temporary_prefixes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9._/-]+$"}
+        }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/profileId"}
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["toolchain", "tests"],
+      "properties": {
+        "toolchain": {"$ref": "#/$defs/capabilityList"},
+        "tests": {"$ref": "#/$defs/capabilityList"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pull_requests_required", "required_checks", "human_approval_for"],
+      "properties": {
+        "pull_requests_required": {"type": "boolean"},
+        "required_checks": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "human_approval_for": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "release",
+              "shared_contract",
+              "reusable_workflow",
+              "security",
+              "credentials",
+              "destructive_operation",
+              "backward_incompatible_change",
+              "cross_repository_risk"
+            ]
+          }
+        }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation_target", "release_route", "direct_release_writes", "hotfix_route"],
+      "properties": {
+        "implementation_target": {"const": "integration"},
+        "release_route": {"const": "integration_to_release"},
+        "direct_release_writes": {"const": false},
+        "hotfix_route": {"const": "integration_first"}
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["read", "bounded_write", "consequential_write"],
+      "properties": {
+        "read": {
+          "allOf": [
+            {"$ref": "#/$defs/permissionRule"},
+            {
+              "properties": {
+                "tier": {"const": "autonomous"},
+                "risk": {"const": "low"}
+              }
+            }
+          ]
+        },
+        "bounded_write": {
+          "allOf": [
+            {"$ref": "#/$defs/permissionRule"},
+            {
+              "properties": {
+                "tier": {"const": "bounded"},
+                "risk": {"enum": ["low", "medium"]}
+              }
+            }
+          ]
+        },
+        "consequential_write": {
+          "allOf": [
+            {"$ref": "#/$defs/permissionRule"},
+            {
+              "properties": {
+                "tier": {"const": "approval_required"},
+                "risk": {"enum": ["high", "critical"]}
+              }
+            }
+          ]
+        }
+      }
+    },
+    "protected_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/repositoryPathPattern"}
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stages"],
+      "properties": {
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "stage", "capability", "required"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+              "stage": {"enum": ["after_write", "pre_commit", "completion_gate"]},
+              "capability": {"$ref": "#/$defs/capabilityId"},
+              "required": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "execution_budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_steps": {"type": "integer", "minimum": 1},
+        "max_elapsed_minutes": {"type": "number", "exclusiveMinimum": 0},
+        "max_retries": {"type": "integer", "minimum": 0},
+        "max_cost_usd": {"type": "number", "minimum": 0},
+        "required_dimensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"enum": ["max_steps", "max_elapsed_minutes", "max_retries", "max_cost_usd"]}
+        }
+      }
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "effect", "reason", "restrictions"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+          "effect": {"const": "restrict"},
+          "reason": {"type": "string", "minLength": 1},
+          "issue": {"type": "string", "minLength": 1},
+          "expires_on": {"type": ["string", "null"], "format": "date"},
+          "restrictions": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "add_protected_paths": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/repositoryPathPattern"}
+              },
+              "require_human_approval_for": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {"type": "string", "minLength": 1}
+              },
+              "remove_capabilities": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/capabilityId"}
+              },
+              "lower_budgets": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "max_steps": {"type": "integer", "minimum": 1},
+                  "max_elapsed_minutes": {"type": "number", "exclusiveMinimum": 0},
+                  "max_retries": {"type": "integer", "minimum": 0},
+                  "max_cost_usd": {"type": "number", "minimum": 0}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "target", "reason", "approval_reference"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+          "target": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "approval_reference": {"type": "string", "minLength": 1},
+          "expires_on": {"type": ["string", "null"], "format": "date"}
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_schema", "profile_schema", "minimum_platform_version"],
+      "properties": {
+        "policy_schema": {"const": "engineering-policy/v1"},
+        "profile_schema": {"const": "repository-profile/v1"},
+        "minimum_platform_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+      }
+    }
+  },
+  "$defs": {
+    "branchName": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*\\.\\.)(?!.*//)[A-Za-z0-9._/-]+$"
+    },
+    "profileId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*$"
+    },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z0-9_-]+)+$"
+    },
+    "capabilityList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/capabilityId"}
+    },
+    "permissionRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "risk", "actions"],
+      "properties": {
+        "tier": {"enum": ["autonomous", "bounded", "approval_required"]},
+        "risk": {"enum": ["low", "medium", "high", "critical"]},
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9._-]*$"}
+        }
+      }
+    },
+    "repositoryPathPattern": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    }
+  }
+}

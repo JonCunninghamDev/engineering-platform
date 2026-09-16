@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/validation-capability-registry-v1.schema.json",
+  "title": "Validation Capability Registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "capabilities"],
+  "properties": {
+    "schema_version": {"const": "validation-capability-registry/v1"},
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "category", "description", "interface", "implementations"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z0-9_-]+)+$"},
+          "category": {"enum": ["browser_e2e", "http_contract", "container_integration"]},
+          "description": {"type": "string", "minLength": 1},
+          "interface": {"enum": ["browser", "http", "container"]},
+          "requirements": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "implementations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "guidance"],
+              "properties": {
+                "name": {"type": "string", "minLength": 1},
+                "ecosystem": {"type": "string", "minLength": 1},
+                "guidance": {"type": "string", "minLength": 1},
+                "example_command": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

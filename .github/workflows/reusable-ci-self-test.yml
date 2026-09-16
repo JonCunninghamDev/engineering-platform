@@ -1,0 +1,53 @@
+name: Reusable CI Self-Test
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '.github/workflows/reusable-consumer-ci.yml'
+      - '.github/workflows/reusable-ci-self-test.yml'
+      - 'tests/fixtures/reusable-ci/**'
+      - 'templates/workflows/**'
+      - 'docs/reusable-ci.md'
+      - 'tests/test_reusable_consumer_ci.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  node-python-fast:
+    name: Node/Python Fast Composition
+    uses: ./.github/workflows/reusable-consumer-ci.yml
+    with:
+      mode: fast
+      enable_node: true
+      enable_python: true
+      node_version: '22'
+      python_version: '3.14'
+      node_working_directory: tests/fixtures/reusable-ci/node
+      python_working_directory: tests/fixtures/reusable-ci/python
+      node_install_command: ''
+      node_test_command: 'node --test smoke.test.mjs'
+      python_install_command: ''
+      python_test_command: "python -m unittest discover -s . -p 'test_*.py' -v"
+      artifact_retention_days: 1
+
+  node-python-blender-full:
+    name: Node/Python/Blender Full Composition
+    uses: ./.github/workflows/reusable-consumer-ci.yml
+    with:
+      mode: full
+      enable_node: true
+      enable_python: true
+      enable_blender: true
+      node_version: '22'
+      python_version: '3.14'
+      node_working_directory: tests/fixtures/reusable-ci/node
+      python_working_directory: tests/fixtures/reusable-ci/python
+      node_install_command: ''
+      node_test_command: 'node --test smoke.test.mjs'
+      python_install_command: ''
+      python_test_command: "python -m unittest discover -s . -p 'test_*.py' -v"
+      blender_test_command: "blender --background --python-expr \"import bpy; assert bpy.app.version >= (3, 0, 0); print('blender composition passed')\""
+      artifact_retention_days: 1

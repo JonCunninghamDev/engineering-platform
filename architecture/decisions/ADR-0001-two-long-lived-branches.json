@@ -1,0 +1,20 @@
+{
+  "schema_version": "architecture-decision/v1",
+  "id": "ADR-0001",
+  "title": "Use exactly two long-lived delivery branches",
+  "status": "accepted",
+  "decision": "The Engineering Platform uses main as the released branch and develop as the integration branch. Implementation work uses temporary branches from develop and returns to develop before any release promotion.",
+  "rationale": "Separating released state from integration state provides an explicit promotion boundary while keeping implementation history deterministic and preventing direct feature or hotfix writes to production state.",
+  "consequences": [
+    "main and develop are the only long-lived branches.",
+    "Temporary implementation branches target develop.",
+    "Release promotion follows develop to main rather than a direct implementation route.",
+    "Released history is synchronized back to develop when required."
+  ],
+  "supersedes": [],
+  "superseded_by": null,
+  "enforcement": {
+    "required": true,
+    "rules": ["delivery.two-long-lived-branches"]
+  }
+}

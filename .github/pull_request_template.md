@@ -20,7 +20,10 @@ Closes #
 
 ## Automated validation
 
-- Commands and checks:
+- [ ] New or updated automated tests are included under `tests/` for feature/defect or hotfix work.
+- [ ] Full local suite passed before commit: `python -m unittest discover -s tests -p 'test_*.py' -v`
+- Local full-suite result:
+- Additional commands and checks:
 - Valid and invalid fixtures:
 - CI run:
 

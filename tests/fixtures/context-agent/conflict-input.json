@@ -1,0 +1,11 @@
+{
+  "schema_version": "context-input/v1",
+  "goal": "Find strong software engineering opportunities.",
+  "context": [
+    {"key": "candidate_profile", "value": "Jon Cunningham verified profile", "source": "human", "confidence": "high"},
+    {"key": "target_role_families", "value": ["AI Platform"], "source": "human", "confidence": "high"},
+    {"key": "location_constraints", "value": "Minnesota only", "source": "resume", "confidence": "medium"},
+    {"key": "location_constraints", "value": "Remote nationwide", "source": "human", "confidence": "high"},
+    {"key": "employment_preferences", "value": ["fulltime"], "source": "human", "confidence": "high"}
+  ]
+}

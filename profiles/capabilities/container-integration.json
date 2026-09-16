@@ -1,0 +1,16 @@
+{
+  "schema_version": "repository-profile/v1",
+  "id": "capability.container-integration",
+  "version": "1.0.0",
+  "kind": "capability",
+  "description": "Opt-in disposable-container integration-test capability without prescribing a database, service topology, or container library.",
+  "capabilities": {
+    "toolchain": ["runtime.container"],
+    "tests": ["test.container_integration"]
+  },
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}

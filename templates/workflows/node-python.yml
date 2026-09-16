@@ -1,0 +1,31 @@
+name: Consumer CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  platform-ci:
+    uses: JonCunninghamDev/engineering-platform/.github/workflows/reusable-consumer-ci.yml@<PINNED_PLATFORM_SHA>
+    with:
+      mode: full
+      enable_node: true
+      enable_python: true
+      node_version: '22'
+      python_version: '3.14'
+      node_cache: true
+      node_package_manager: npm
+      node_cache_dependency_path: package-lock.json
+      python_cache: true
+      python_cache_dependency_path: requirements.txt
+      node_install_command: npm ci
+      node_test_command: npm test
+      node_build_command: npm run build
+      python_install_command: python -m pip install -r requirements.txt
+      python_test_command: python -m unittest discover -s tests -p 'test_*.py' -v
+      artifact_retention_days: 7

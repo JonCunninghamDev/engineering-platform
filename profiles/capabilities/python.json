@@ -1,0 +1,16 @@
+{
+  "schema_version": "repository-profile/v1",
+  "id": "capability.python",
+  "version": "1.0.0",
+  "kind": "capability",
+  "description": "General Python runtime and test capabilities without repository-specific commands or paths.",
+  "capabilities": {
+    "toolchain": ["runtime.python"],
+    "tests": ["test.python"]
+  },
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}

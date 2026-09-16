@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/capability-registry-v1.schema.json",
+  "title": "Capability Registry v1",
+  "type": "object",
+  "required": ["schema_version", "capabilities"],
+  "properties": {
+    "schema_version": {"const": "capability-registry/v1"},
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "provider", "description", "trigger_terms", "dependencies", "inputs", "outputs", "risk", "minimum_tier", "human_gate"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "provider": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "trigger_terms": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "dependencies": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "inputs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "outputs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "risk": {"enum": ["low", "medium", "high"]},
+          "minimum_tier": {"enum": ["basic", "managed", "full"]},
+          "human_gate": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}
