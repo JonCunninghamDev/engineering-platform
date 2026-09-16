@@ -27,6 +27,12 @@ class PlatformLayoutValidatorTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
 
+    def _valid_agents(self) -> str:
+        lines = ["# Agents", "This is a routing surface."]
+        lines.extend(f"## {heading}" for heading in validator.AGENTS_REQUIRED_HEADINGS)
+        lines.extend(validator.AGENTS_REQUIRED_POINTERS)
+        return "\n".join(lines) + "\n"
+
     def _write_valid_fixture(self) -> None:
         for relative in validator.REQUIRED_DIRECTORIES:
             (self.root / relative).mkdir(parents=True, exist_ok=True)
@@ -48,27 +54,7 @@ class PlatformLayoutValidatorTests(unittest.TestCase):
             )
             + "\n",
         )
-
-        headings = (
-            "Repository authority",
-            "Instruction precedence",
-            "Startup contract",
-            "Branch and pull-request contract",
-            "Implementation authority",
-            "Human acceptance testing",
-            "Compatibility and versioning",
-            "Troubleshooting",
-            "Definition of done",
-        )
-        agents = ["# Agents"]
-        agents.extend(f"## {heading}" for heading in headings)
-        agents.extend(
-            (
-                "Read `README.md` from `main` first.",
-                "Verify the latest non-draft, non-prerelease release.",
-            )
-        )
-        self._write("AGENTS.md", "\n".join(agents) + "\n")
+        self._write("AGENTS.md", self._valid_agents())
         self._write("CHANGELOG.md", "# Changelog\n\n## [0.1.0]\n")
         self._write("docs/releases/v0.1.0.md", "# Engineering Platform v0.1.0\n")
         self._write(
@@ -125,10 +111,30 @@ class PlatformLayoutValidatorTests(unittest.TestCase):
         self._write("README.md", readme.replace("authoring source of truth", "shared source"))
         self.assert_has_error("README.md does not describe required concept: authoring source of truth")
 
-    def test_missing_agents_heading_is_reported(self) -> None:
-        agents = (self.root / "AGENTS.md").read_text(encoding="utf-8")
-        self._write("AGENTS.md", agents.replace("## Definition of done", "## Completion"))
-        self.assert_has_error("AGENTS.md is missing heading: Definition of done")
+    def test_missing_agents_pointer_heading_is_reported(self) -> None:
+        agents = self._valid_agents().replace("## Authoritative pointers", "## Links")
+        self._write("AGENTS.md", agents)
+        self.assert_has_error("AGENTS.md is missing pointer heading: Authoritative pointers")
+
+    def test_agents_entrypoint_has_line_budget(self) -> None:
+        agents = self._valid_agents() + ("extra detail\n" * validator.AGENTS_MAX_LINES)
+        self._write("AGENTS.md", agents)
+        errors = validator.validate(self.root)
+        self.assertTrue(
+            any("concise pointer surface" in error for error in errors),
+            errors,
+        )
+
+    def test_agents_rejects_detailed_operating_heading(self) -> None:
+        self._write("AGENTS.md", self._valid_agents() + "## Troubleshooting\nDetailed procedure\n")
+        self.assert_has_error(
+            "AGENTS.md duplicates detailed operating guidance instead of pointing to its authority: Troubleshooting"
+        )
+
+    def test_agents_requires_authoritative_pointer(self) -> None:
+        agents = self._valid_agents().replace("`engineering-policy.json`\n", "")
+        self._write("AGENTS.md", agents)
+        self.assert_has_error("AGENTS.md is missing authoritative pointer: `engineering-policy.json`")
 
     def test_changelog_version_mismatch_is_reported(self) -> None:
         self._write("CHANGELOG.md", "# Changelog\n\n## [0.0.9]\n")
