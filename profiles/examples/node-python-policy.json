@@ -1,0 +1,84 @@
+{
+  "schema_version": "engineering-policy/v1",
+  "platform": {
+    "repository": "JonCunninghamDev/engineering-platform",
+    "version": "v0.1.0",
+    "commit": "1b09e08b2f6a771bc6b8e0c5359dfb2b8a5b71db"
+  },
+  "repository": {
+    "policy_id": "example-node-python",
+    "description": "Example policy for a generic Node.js and Python consumer."
+  },
+  "branches": {
+    "release": "main",
+    "integration": "develop",
+    "temporary_prefixes": ["agent/", "feature/", "fix/"]
+  },
+  "profiles": ["node-python"],
+  "capabilities": {
+    "toolchain": ["runtime.node", "runtime.python"],
+    "tests": ["test.node", "test.python"]
+  },
+  "review": {
+    "pull_requests_required": true,
+    "required_checks": ["Validate engineering platform"],
+    "human_approval_for": ["release", "shared_contract", "security", "credentials"]
+  },
+  "delivery": {
+    "implementation_target": "integration",
+    "release_route": "integration_to_release",
+    "direct_release_writes": false,
+    "hotfix_route": "integration_first"
+  },
+  "permissions": {
+    "read": {
+      "tier": "autonomous",
+      "risk": "low",
+      "actions": ["repository.read", "issue.read", "test.inspect"]
+    },
+    "bounded_write": {
+      "tier": "bounded",
+      "risk": "medium",
+      "actions": ["branch.write", "draft.write", "test.write"]
+    },
+    "consequential_write": {
+      "tier": "approval_required",
+      "risk": "high",
+      "actions": ["release.write", "external.write", "credential.write", "destructive.write"]
+    }
+  },
+  "protected_paths": [
+    ".github/workflows/**",
+    "AGENTS.md",
+    "engineering-policy.json"
+  ],
+  "validation": {
+    "stages": [
+      {
+        "id": "node-tests",
+        "stage": "completion_gate",
+        "capability": "test.node",
+        "required": true
+      },
+      {
+        "id": "python-tests",
+        "stage": "completion_gate",
+        "capability": "test.python",
+        "required": true
+      }
+    ]
+  },
+  "execution_budgets": {
+    "max_steps": 120,
+    "max_elapsed_minutes": 45,
+    "max_retries": 2,
+    "required_dimensions": ["max_steps", "max_retries"]
+  },
+  "overrides": [],
+  "exceptions": [],
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}

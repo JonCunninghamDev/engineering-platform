@@ -1,0 +1,16 @@
+{
+  "schema_version": "repository-profile/v1",
+  "id": "capability.blender",
+  "version": "1.0.0",
+  "kind": "capability",
+  "description": "General Blender runtime and validation capabilities without product-specific visual rules or paths.",
+  "capabilities": {
+    "toolchain": ["runtime.blender"],
+    "tests": ["test.blender"]
+  },
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}

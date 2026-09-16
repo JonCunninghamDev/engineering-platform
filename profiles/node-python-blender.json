@@ -1,0 +1,17 @@
+{
+  "schema_version": "repository-profile/v1",
+  "id": "node-python-blender",
+  "version": "1.0.0",
+  "kind": "composition",
+  "description": "Composition of the reusable Node/Python profile with the independent Blender capability primitive.",
+  "includes": ["node-python", "capability.blender"],
+  "capabilities": {
+    "toolchain": [],
+    "tests": []
+  },
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}
