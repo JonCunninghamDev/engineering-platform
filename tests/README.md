@@ -7,10 +7,11 @@ Tests should cover both accepted and rejected behavior. A prose rule is incomple
 ## Current suites
 
 - `test_validate_platform_layout.py` exercises the platform layout, CI-policy wiring, and release-metadata validator against temporary valid and invalid repository fixtures.
-- `test_validate_delivery_route.py` executes the reusable feature, promotion, synchronization, hotfix, direct-main rejection, and ambiguity matrix in `fixtures/delivery-routes.json`.
-- `test_validate_pr_policy.py` verifies that repository PR routes are valid and that feature/defect and hotfix work includes new or updated automated tests.
+- `test_validate_delivery_route.py` executes the reusable feature, promotion, synchronization, direct-main rejection, urgent-fix, and ambiguity matrix in `fixtures/delivery-routes.json`.
+- `test_validate_pr_policy.py` verifies that implementation PRs target `develop` and include new or updated automated tests.
 - `test_agent_steering_scenarios.py` verifies the required autonomous, recovery, and human-gate decisions in `fixtures/agent-steering-scenarios-v1.json`.
 - `test_context_agent.py` verifies Basic Context Agent readiness, missing required context, explicit contradiction detection, strict service-tier boundaries, demo evidence, and `context.yaml` / run-report artifact generation using `fixtures/context-agent/`.
+- `test_orchestrator_agent.py` verifies Basic Orchestrator context validation, minimum capability selection, dependency ordering, cycle rejection, skipped-capability explanations, strict service-tier boundaries, zero dispatch, demo evidence, and execution-plan artifact generation using `fixtures/orchestrator/`.
 
 Run the full Python test suite with:
 
