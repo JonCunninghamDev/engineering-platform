@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       mode:
-        description: Validation depth: fast skips optional build commands; full runs them.
+        description: 'Validation depth: fast skips optional build commands; full runs them.'
         required: false
         type: string
         default: full
@@ -97,7 +97,7 @@ on:
         type: string
         default: requirements.txt
       artifact_paths:
-        description: Optional newline-delimited build artifact paths uploaded only after a successful full run.
+        description: 'Optional newline-delimited build artifact paths uploaded only after a successful full run.'
         required: false
         type: string
         default: ''
