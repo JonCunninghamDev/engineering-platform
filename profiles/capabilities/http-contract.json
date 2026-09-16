@@ -1,0 +1,16 @@
+{
+  "schema_version": "repository-profile/v1",
+  "id": "capability.http-contract",
+  "version": "1.0.0",
+  "kind": "capability",
+  "description": "Opt-in HTTP contract validation capability without prescribing a contract-test tool or service architecture.",
+  "capabilities": {
+    "toolchain": ["runtime.http_client"],
+    "tests": ["test.http_contract"]
+  },
+  "compatibility": {
+    "policy_schema": "engineering-policy/v1",
+    "profile_schema": "repository-profile/v1",
+    "minimum_platform_version": "0.1.0"
+  }
+}
