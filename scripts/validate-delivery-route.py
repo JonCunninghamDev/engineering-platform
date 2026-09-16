@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 from dataclasses import dataclass
 
-RESERVED_PREFIXES = ("Release:", "Sync:")
+RESERVED_PREFIXES = ("Release:", "Sync:", "Prepare Release:")
+RELEASE_PREPARATION_BRANCH = re.compile(r"^release/[0-9]+\.[0-9]+\.[0-9]+$")
 
 
 @dataclass(frozen=True)
@@ -32,13 +34,7 @@ def validate_route(
     default_branch: str = "main",
     integration_branch: str = "develop",
 ) -> RouteResult:
-    """Validate the two-long-lived-branch delivery model using PR metadata.
-
-    All implementation branches target the integration branch. The integration
-    branch promotes to the release/default branch, and released history may then
-    synchronize back to integration. There is no direct implementation route to
-    the release/default branch.
-    """
+    """Validate the two-long-lived-branch delivery model using PR metadata."""
     base = base.strip()
     head = head.strip()
     title = title.strip()
@@ -47,27 +43,14 @@ def validate_route(
     errors: list[str] = []
 
     if not all((base, head, title, default_branch, integration_branch)):
-        missing = [
-            name
-            for name, value in (
-                ("base", base),
-                ("head", head),
-                ("title", title),
-                ("default_branch", default_branch),
-                ("integration_branch", integration_branch),
-            )
-            if not value
-        ]
+        missing = [name for name, value in (("base", base), ("head", head), ("title", title), ("default_branch", default_branch), ("integration_branch", integration_branch)) if not value]
         return RouteResult(None, (f"missing required route metadata: {', '.join(missing)}",))
-
     if default_branch == integration_branch:
         return RouteResult(None, ("default and integration branches must be different",))
-
     if base == head:
         return RouteResult(None, (f"base and head are identical ({base}); route is ambiguous",))
 
     route: str | None = None
-
     if base == default_branch and head == integration_branch:
         route = "promotion"
         if not _starts_with(title, "Release:"):
@@ -77,34 +60,29 @@ def validate_route(
         if not _starts_with(title, "Sync:"):
             errors.append("synchronization PR title must start with 'Sync:'")
     elif base == default_branch:
-        errors.append(
-            "direct-main route rejected: all implementation work must branch from the integration "
-            "branch, return to the integration branch, and reach production only through an "
-            "integration-to-main release promotion"
-        )
+        errors.append("direct-main route rejected: all implementation work must branch from the integration branch, return to the integration branch, and reach production only through an integration-to-main release promotion")
     elif base == integration_branch:
-        route = "feature"
-        if head in {default_branch, integration_branch}:
-            errors.append("ordinary integration work must come from a dedicated temporary branch")
-        for prefix in RESERVED_PREFIXES:
-            if _starts_with(title, prefix):
-                errors.append(
-                    f"ordinary integration PR cannot use reserved '{prefix}' title prefix; "
-                    "route metadata is ambiguous"
-                )
-                break
+        if RELEASE_PREPARATION_BRANCH.fullmatch(head):
+            route = "release_preparation"
+            if not _starts_with(title, "Prepare Release:"):
+                errors.append("release-preparation PR title must start with 'Prepare Release:'")
+        else:
+            route = "feature"
+            if head in {default_branch, integration_branch}:
+                errors.append("ordinary integration work must come from a dedicated temporary branch")
+            for prefix in RESERVED_PREFIXES:
+                if _starts_with(title, prefix):
+                    errors.append(f"ordinary integration PR cannot use reserved '{prefix}' title prefix; route metadata is ambiguous")
+                    break
     else:
-        errors.append(
-            f"unsupported base branch '{base}'; expected '{integration_branch}' for implementation "
-            f"work or '{default_branch}' only for integration release promotion"
-        )
+        errors.append(f"unsupported base branch '{base}'; expected '{integration_branch}' for implementation work or '{default_branch}' only for integration release promotion")
 
     if route == "promotion" and _starts_with(title, "Sync:"):
         errors.append("promotion PR uses a reserved title for a different route")
     if route == "synchronization" and _starts_with(title, "Release:"):
         errors.append("synchronization PR uses a reserved title for a different route")
 
-    return RouteResult(route if not errors else route, tuple(errors))
+    return RouteResult(route, tuple(errors))
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -119,13 +97,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    result = validate_route(
-        base=args.base,
-        head=args.head,
-        title=args.title,
-        default_branch=args.default_branch,
-        integration_branch=args.integration_branch,
-    )
+    result = validate_route(base=args.base, head=args.head, title=args.title, default_branch=args.default_branch, integration_branch=args.integration_branch)
     if result.errors:
         for error in result.errors:
             print(f"ERROR: {error}", file=sys.stderr)
