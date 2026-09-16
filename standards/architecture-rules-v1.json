@@ -1,0 +1,17 @@
+{
+  "schema_version": "architecture-rule-registry/v1",
+  "rules": [
+    {
+      "id": "delivery.two-long-lived-branches",
+      "adr": "ADR-0001",
+      "description": "The repository policy must define main as release, develop as integration, and temporary implementation prefixes rather than additional long-lived implementation branches.",
+      "validator": {
+        "type": "python",
+        "path": "scripts/validate_architecture.py",
+        "entrypoint": "check_two_long_lived_branches"
+      },
+      "tests": ["tests/test_architecture_rules.py"],
+      "repair": "Restore engineering-policy.json branch roles to release=main and integration=develop and keep implementation work on temporary issue/feature/fix branches."
+    }
+  ]
+}

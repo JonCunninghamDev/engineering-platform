@@ -26,6 +26,10 @@
         "command": ["python", "scripts/validate_consumer_agnostic.py"]
       },
       {
+        "id": "architecture-rules",
+        "command": ["python", "scripts/validate_architecture.py"]
+      },
+      {
         "id": "python-compile",
         "command": ["python", "-m", "compileall", "-q", "scripts", "tests"]
       }

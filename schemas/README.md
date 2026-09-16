@@ -15,5 +15,7 @@ Versioned machine-readable contracts belong here.
 - `engineering-policy-v1.schema.json` defines consumer platform pins, branch roles, profile/capability requirements, review/delivery gates, permission and risk tiers, protected paths, validation stages, restrictive overrides, explicit exceptions, optional execution budgets, and compatibility metadata.
 - `repository-profile-v1.schema.json` defines reusable capability primitives and profile compositions consumed by `engineering-policy/v1`.
 - `platform-compatibility-v1.schema.json` defines the public-surface inventory, pre-1.0/stable versioning rules, workflow/profile compatibility metadata, and machine-readable deprecation lifecycle.
+- `architecture-decision-v1.schema.json` defines stable ADR identity, status, rationale, consequences, supersession, and linked executable-rule requirements.
+- `architecture-rule-registry-v1.schema.json` defines the bidirectional registry from architecture rules to governing ADRs, executable validators, tests, and repair guidance.
 
 Public schema compatibility is governed by `docs/compatibility.md` and `standards/platform-compatibility-v1.json`. Breaking schema changes must use the appropriate release boundary and migration evidence rather than silently modifying a published interface.

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/architecture-decision-v1.schema.json",
+  "title": "Architecture Decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "status",
+    "decision",
+    "rationale",
+    "consequences",
+    "supersedes",
+    "superseded_by",
+    "enforcement"
+  ],
+  "properties": {
+    "schema_version": {"const": "architecture-decision/v1"},
+    "id": {"type": "string", "pattern": "^ADR-[0-9]{4}$"},
+    "title": {"type": "string", "minLength": 1},
+    "status": {"enum": ["proposed", "accepted", "deprecated", "superseded"]},
+    "decision": {"type": "string", "minLength": 1},
+    "rationale": {"type": "string", "minLength": 1},
+    "consequences": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "supersedes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^ADR-[0-9]{4}$"}
+    },
+    "superseded_by": {
+      "type": ["string", "null"],
+      "pattern": "^ADR-[0-9]{4}$"
+    },
+    "enforcement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "rules"],
+      "properties": {
+        "required": {"type": "boolean"},
+        "rules": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z][a-z0-9.-]+$"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {"const": "accepted"},
+          "enforcement": {
+            "properties": {"required": {"const": true}}
+          }
+        },
+        "required": ["status", "enforcement"]
+      },
+      "then": {
+        "properties": {
+          "enforcement": {
+            "properties": {"rules": {"minItems": 1}}
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "superseded"}}, "required": ["status"]},
+      "then": {"properties": {"superseded_by": {"type": "string"}}}
+    }
+  ]
+}

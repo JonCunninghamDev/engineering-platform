@@ -35,6 +35,20 @@
       "compatibility": "breaking_requires_version_boundary"
     },
     {
+      "id": "schema.architecture-decision",
+      "kind": "schema",
+      "path": "schemas/architecture-decision-v1.schema.json",
+      "interface_version": "1",
+      "compatibility": "breaking_requires_version_boundary"
+    },
+    {
+      "id": "schema.architecture-rule-registry",
+      "kind": "schema",
+      "path": "schemas/architecture-rule-registry-v1.schema.json",
+      "interface_version": "1",
+      "compatibility": "breaking_requires_version_boundary"
+    },
+    {
       "id": "profile.node",
       "kind": "profile",
       "path": "profiles/capabilities/node.json",
