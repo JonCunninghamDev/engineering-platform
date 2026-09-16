@@ -56,6 +56,9 @@ jobs:
       - name: Validate public compatibility contract
         run: python scripts/validate_compatibility.py
 
+      - name: Validate consumer-agnostic platform boundary
+        run: python scripts/validate_consumer_agnostic.py
+
       - name: Run full platform test suite
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 
