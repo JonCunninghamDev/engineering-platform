@@ -1,6 +1,6 @@
 {
   "schema_version": "platform-compatibility/v1",
-  "current_platform_version": "0.1.0",
+  "current_platform_version": "1.0.0",
   "versioning": {"pre_1_0": {"patch": "backward_compatible_only", "minor_breaking_changes": "migration_required"}, "stable": {"patch": "backward_compatible_fixes", "minor": "backward_compatible_additions", "major": "breaking_changes_allowed"}},
   "surfaces": [
     {"id":"agent.operating-contract","kind":"contract","path":"agent/operating-contract-v1.md","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
