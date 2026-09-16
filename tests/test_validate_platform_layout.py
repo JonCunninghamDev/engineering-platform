@@ -73,7 +73,24 @@ class PlatformLayoutValidatorTests(unittest.TestCase):
         self._write("docs/releases/v0.1.0.md", "# Engineering Platform v0.1.0\n")
         self._write(
             ".github/workflows/ci.yml",
-            "fetch-depth: 0\nvalidate-pr-policy.py\nunittest discover\n",
+            "\n".join(
+                (
+                    "fetch-depth: 0",
+                    "validate-pr-policy.py",
+                    "validate-protected-paths.py",
+                    "run_fast_feedback.py --stage pre_commit",
+                    "run_fast_feedback.py --stage completion_gate",
+                )
+            )
+            + "\n",
+        )
+        self._write(
+            ".githooks/pre-commit",
+            "python scripts/run_fast_feedback.py --stage pre_commit\n",
+        )
+        self._write(
+            "scripts/install-hooks.sh",
+            "git config core.hooksPath .githooks\n",
         )
         self._write(
             ".github/workflows/release.yml",
@@ -121,13 +138,34 @@ class PlatformLayoutValidatorTests(unittest.TestCase):
         self._write("docs/releases/v0.1.0.md", "# Engineering Platform v0.0.9\n")
         self.assert_has_error("release notes heading does not match VERSION: v0.1.0")
 
-    def test_ci_workflow_requirement_is_reported(self) -> None:
-        self._write(
-            ".github/workflows/ci.yml",
-            "fetch-depth: 0\nunittest discover\n",
-        )
+    def test_ci_workflow_requires_pr_policy(self) -> None:
+        ci = (self.root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self._write(".github/workflows/ci.yml", ci.replace("validate-pr-policy.py\n", ""))
         self.assert_has_error(
             ".github/workflows/ci.yml does not describe required concept: validate-pr-policy.py"
+        )
+
+    def test_ci_workflow_requires_protected_path_enforcement(self) -> None:
+        ci = (self.root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self._write(".github/workflows/ci.yml", ci.replace("validate-protected-paths.py\n", ""))
+        self.assert_has_error(
+            ".github/workflows/ci.yml does not describe required concept: validate-protected-paths.py"
+        )
+
+    def test_ci_workflow_requires_completion_gate(self) -> None:
+        ci = (self.root / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self._write(
+            ".github/workflows/ci.yml",
+            ci.replace("run_fast_feedback.py --stage completion_gate\n", ""),
+        )
+        self.assert_has_error(
+            ".github/workflows/ci.yml does not describe required concept: run_fast_feedback.py --stage completion_gate"
+        )
+
+    def test_pre_commit_hook_requirement_is_reported(self) -> None:
+        self._write(".githooks/pre-commit", "echo bypass\n")
+        self.assert_has_error(
+            ".githooks/pre-commit does not describe required concept: run_fast_feedback.py"
         )
 
     def test_release_workflow_requirement_is_reported(self) -> None:
