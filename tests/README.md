@@ -15,6 +15,7 @@ Tests should cover both accepted and rejected behavior. A prose rule is incomple
 - `test_builder_agent.py` verifies Basic Builder explicit assignment, execution-plan linkage, scope/protected-path enforcement, traversal and delete rejection, deterministic diff/hash evidence, strict service-tier boundaries, zero-write demo behavior, and change-set artifact generation using `fixtures/builder/`.
 - `test_engineering_policy.py` validates `engineering-policy/v1` examples and invalid fixtures, independent Node/Python/Blender profile composition, permission fail-closed behavior, protected paths, required budget dimensions, explicit exceptions, and the policy CLI.
 - `test_reusable_consumer_ci.py` validates the reusable workflow contract, stable job name, independent capability switches, fast/full semantics, bounded artifact retention, immutable pin templates, and generic consumer identity boundaries.
+- `test_compatibility.py` validates the public compatibility manifest, VERSION alignment, surface paths, profile identifiers, reusable-workflow input inventory, stable job names, and deprecation/removal rules.
 
 `Reusable CI Self-Test` additionally calls the reusable workflow in GitHub Actions with both Node/Python and Node/Python/Blender compositions so the workflow is exercised rather than only parsed.
 
@@ -30,10 +31,16 @@ Run the full Python test suite with:
 python -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
+Run the public-surface validator directly with:
+
+```bash
+python scripts/validate_compatibility.py
+```
+
 For implementation branches, add or update the relevant automated tests with the change and run the full suite before committing. Platform CI reruns the same suite for pull requests into `develop` and `main`.
 
-CI also validates pull-request route/test evidence, compiles `scripts` and `tests`, validates shell syntax, and parses every JSON and YAML file.
+CI also validates the public compatibility manifest, pull-request route/test evidence, repository layout, Python compilation, shell syntax, and every JSON/YAML file.
 
 ## Later suites
 
-Later suites will cover policy enforcement adapters, compatibility/upgrade rules, and consumer migrations.
+Later suites will cover policy enforcement adapters, observable execution budgets, and consumer migrations.

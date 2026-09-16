@@ -53,6 +53,9 @@ jobs:
       - name: Validate repository layout
         run: python scripts/validate-platform-layout.py
 
+      - name: Validate public compatibility contract
+        run: python scripts/validate_compatibility.py
+
       - name: Run full platform test suite
         run: python -m unittest discover -s tests -p 'test_*.py' -v
 

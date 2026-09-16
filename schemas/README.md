@@ -14,5 +14,6 @@ Versioned machine-readable contracts belong here.
 - `agent-run-report-v1.schema.json` defines the machine-readable evidence record used by demo tooling and the future Human Lead Console.
 - `engineering-policy-v1.schema.json` defines consumer platform pins, branch roles, profile/capability requirements, review/delivery gates, permission and risk tiers, protected paths, validation stages, restrictive overrides, explicit exceptions, optional execution budgets, and compatibility metadata.
 - `repository-profile-v1.schema.json` defines reusable capability primitives and profile compositions consumed by `engineering-policy/v1`.
+- `platform-compatibility-v1.schema.json` defines the public-surface inventory, pre-1.0/stable versioning rules, workflow/profile compatibility metadata, and machine-readable deprecation lifecycle.
 
-Schema changes require valid/invalid fixtures, compatibility documentation, and human review.
+Public schema compatibility is governed by `docs/compatibility.md` and `standards/platform-compatibility-v1.json`. Breaking schema changes must use the appropriate release boundary and migration evidence rather than silently modifying a published interface.
