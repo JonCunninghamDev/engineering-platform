@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+mkdir -p .git/fast-feedback
+python scripts/run_fast_feedback.py \
+  --stage pre_commit \
+  --evidence .git/fast-feedback/pre-commit.json
