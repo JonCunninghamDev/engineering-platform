@@ -54,6 +54,40 @@ class ProtectedPathTests(unittest.TestCase):
         self.assertEqual(42, evidence["issue_number"])
         self.assertTrue(evidence["authorization_marker_present"])
 
+    def test_develop_to_main_release_route_allows_protected_changes(self) -> None:
+        evidence = module.validate(
+            policy=self.policy,
+            changed_files=["engineering-policy.json", ".github/workflows/ci.yml"],
+            head="develop",
+            base="main",
+            issue_body="",
+        )
+        self.assertEqual("passed", evidence["status"])
+        self.assertTrue(evidence["release_route"])
+        self.assertIsNone(evidence["issue_number"])
+
+    def test_develop_to_non_main_does_not_get_release_exception(self) -> None:
+        evidence = module.validate(
+            policy=self.policy,
+            changed_files=["schemas/example.json"],
+            head="develop",
+            base="staging",
+            issue_body="",
+        )
+        self.assertEqual("failed", evidence["status"])
+        self.assertFalse(evidence["release_route"])
+
+    def test_other_branch_to_main_does_not_get_release_exception(self) -> None:
+        evidence = module.validate(
+            policy=self.policy,
+            changed_files=["schemas/example.json"],
+            head="release/candidate",
+            base="main",
+            issue_body="Policy change authorization: approved",
+        )
+        self.assertEqual("failed", evidence["status"])
+        self.assertFalse(evidence["release_route"])
+
     def test_protected_change_without_issue_branch_fails_closed(self) -> None:
         evidence = module.validate(
             policy=self.policy,
@@ -63,7 +97,7 @@ class ProtectedPathTests(unittest.TestCase):
         )
         self.assertEqual("failed", evidence["status"])
         self.assertIsNone(evidence["issue_number"])
-        self.assertIn("does not identify an issue", " ".join(evidence["errors"]))
+        self.assertIn("neither the governed develop-to-main release route", " ".join(evidence["errors"]))
 
     def test_glob_matching_is_repository_relative(self) -> None:
         matches = module.protected_matches(
