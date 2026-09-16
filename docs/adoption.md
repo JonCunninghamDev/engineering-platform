@@ -8,6 +8,8 @@ A consumer repository must remain understandable, buildable, and recoverable fro
 
 Compatibility and upgrade rules are defined in [`docs/compatibility.md`](compatibility.md). Public surfaces are inventoried in `standards/platform-compatibility-v1.json`.
 
+The platform must not encode the identity, product architecture, prerequisites, or backlog state of any specific consumer repository. Consumer-specific migration work belongs in the consumer repository that owns it.
+
 ## Consumer hierarchy
 
 Agents resolve instructions in this order:
@@ -81,7 +83,7 @@ A consumer upgrade PR must identify affected public surfaces, test evidence, and
 
 Overrides are explicit, narrow, and documented with rationale. Examples include:
 
-- Blender and visual changes requiring human acceptance;
+- generated-artifact or visual changes requiring human acceptance;
 - a repository without public deployment infrastructure;
 - a regulated security or data-handling requirement;
 - a different integration branch during a temporary migration.
@@ -90,7 +92,7 @@ Overrides must not be hidden in workflow implementation. They belong in the cons
 
 ## Failure isolation
 
-A platform outage or inaccessible private repository must not prevent:
+A platform outage or inaccessible repository must not prevent:
 
 - reading local steering;
 - running local tests;
@@ -99,13 +101,16 @@ A platform outage or inaccessible private repository must not prevent:
 
 Reusable workflow failures should identify the pinned platform release and expose enough logs for the consumer to determine whether the defect belongs in the platform or product repository.
 
-## First consumer
+## Consumer readiness
 
-`JonCunninghamDev/low-poly-character-studio` will be the first consumer after:
+A consumer may adopt the platform when:
 
-- the shared steering baseline is released and verified;
-- shared delivery policy, `engineering-policy/v1`, and the compatibility contract are released;
-- the reusable `node-python-blender` workflow is included in that verified release;
-- its final-GLB prerequisite issue has merged and remains in current `develop` history.
+- the required shared steering and delivery surfaces are included in a verified platform release;
+- the required `engineering-policy/v1`, compatibility contract, profiles, and reusable workflows are included in that release;
+- the consumer records an immutable platform pin and preserves its own product-specific rules locally;
+- the consumer can validate the adoption through its own complete CI suite;
+- rollback to the prior immutable platform pin is explicit.
 
-Do not pin the first consumer to unreleased platform `develop` state merely because an immutable development commit exists. The first adoption should prove the release/verification/rollback path that later consumers will rely on.
+Consumer-owned prerequisites and migration sequencing are intentionally not tracked here. They belong in the consumer repository.
+
+Do not pin a consumer to unreleased platform `develop` state merely because an immutable development commit exists. Adoption should prove the release, verification, compatibility, and rollback path that all consumers can rely on.
