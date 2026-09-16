@@ -1,0 +1,37 @@
+{
+  "schema_version": "builder-task/v1",
+  "assignment": {
+    "id": "builder-task-001",
+    "source": "human",
+    "allowed": true
+  },
+  "plan": {
+    "run_id": "orchestrator-builder-001",
+    "capability": "engineering.implement"
+  },
+  "workflow": "engineering-change",
+  "goal": "Add a greeting module and update documentation.",
+  "scope": {
+    "allowed_paths": [
+      "src/",
+      "README.md"
+    ],
+    "protected_paths": [
+      ".github/",
+      "AGENTS.md"
+    ]
+  },
+  "changes": [
+    {
+      "path": "src/greeting.py",
+      "operation": "create",
+      "proposed_content": "def greeting(name: str) -> str:\n    return f\"Hello, {name}!\"\n"
+    },
+    {
+      "path": "README.md",
+      "operation": "update",
+      "original_content": "# Demo\n",
+      "proposed_content": "# Demo\n\nGreeting support is available.\n"
+    }
+  ]
+}
