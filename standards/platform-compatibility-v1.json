@@ -1,181 +1,27 @@
 {
   "schema_version": "platform-compatibility/v1",
   "current_platform_version": "0.1.0",
-  "versioning": {
-    "pre_1_0": {
-      "patch": "backward_compatible_only",
-      "minor_breaking_changes": "migration_required"
-    },
-    "stable": {
-      "patch": "backward_compatible_fixes",
-      "minor": "backward_compatible_additions",
-      "major": "breaking_changes_allowed"
-    }
-  },
+  "versioning": {"pre_1_0": {"patch": "backward_compatible_only", "minor_breaking_changes": "migration_required"}, "stable": {"patch": "backward_compatible_fixes", "minor": "backward_compatible_additions", "major": "breaking_changes_allowed"}},
   "surfaces": [
-    {
-      "id": "agent.operating-contract",
-      "kind": "contract",
-      "path": "agent/operating-contract-v1.md",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "schema.engineering-policy",
-      "kind": "schema",
-      "path": "schemas/engineering-policy-v1.schema.json",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "schema.repository-profile",
-      "kind": "schema",
-      "path": "schemas/repository-profile-v1.schema.json",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "schema.architecture-decision",
-      "kind": "schema",
-      "path": "schemas/architecture-decision-v1.schema.json",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "schema.architecture-rule-registry",
-      "kind": "schema",
-      "path": "schemas/architecture-rule-registry-v1.schema.json",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "schema.validation-capability-registry",
-      "kind": "schema",
-      "path": "schemas/validation-capability-registry-v1.schema.json",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "schema.validation-capability-evidence",
-      "kind": "schema",
-      "path": "schemas/validation-capability-evidence-v1.schema.json",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "profile.node",
-      "kind": "profile",
-      "path": "profiles/capabilities/node.json",
-      "interface_version": "1.0.0",
-      "identifier": "capability.node",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "profile.python",
-      "kind": "profile",
-      "path": "profiles/capabilities/python.json",
-      "interface_version": "1.0.0",
-      "identifier": "capability.python",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "profile.blender",
-      "kind": "profile",
-      "path": "profiles/capabilities/blender.json",
-      "interface_version": "1.0.0",
-      "identifier": "capability.blender",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "profile.browser-e2e",
-      "kind": "profile",
-      "path": "profiles/capabilities/browser-e2e.json",
-      "interface_version": "1.0.0",
-      "identifier": "capability.browser-e2e",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "profile.http-contract",
-      "kind": "profile",
-      "path": "profiles/capabilities/http-contract.json",
-      "interface_version": "1.0.0",
-      "identifier": "capability.http-contract",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "profile.container-integration",
-      "kind": "profile",
-      "path": "profiles/capabilities/container-integration.json",
-      "interface_version": "1.0.0",
-      "identifier": "capability.container-integration",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "profile.node-python",
-      "kind": "profile",
-      "path": "profiles/node-python.json",
-      "interface_version": "1.0.0",
-      "identifier": "node-python",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "profile.node-python-blender",
-      "kind": "profile",
-      "path": "profiles/node-python-blender.json",
-      "interface_version": "1.0.0",
-      "identifier": "node-python-blender",
-      "compatibility": "stable_identifier"
-    },
-    {
-      "id": "workflow.consumer-ci",
-      "kind": "workflow",
-      "path": ".github/workflows/reusable-consumer-ci.yml",
-      "interface_version": "1",
-      "compatibility": "stable_public_interface",
-      "public_inputs": [
-        "mode",
-        "enable_node",
-        "enable_python",
-        "enable_blender",
-        "node_version",
-        "python_version",
-        "node_working_directory",
-        "python_working_directory",
-        "blender_working_directory",
-        "node_install_command",
-        "node_test_command",
-        "node_build_command",
-        "python_install_command",
-        "python_test_command",
-        "python_build_command",
-        "install_uv",
-        "blender_install_command",
-        "blender_test_command",
-        "node_cache",
-        "node_package_manager",
-        "node_cache_dependency_path",
-        "python_cache",
-        "python_cache_dependency_path",
-        "artifact_paths",
-        "artifact_retention_days",
-        "timeout_minutes"
-      ],
-      "stable_job_names": ["Platform Consumer CI"]
-    },
-    {
-      "id": "template.node-python",
-      "kind": "template",
-      "path": "templates/workflows/node-python.yml",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    },
-    {
-      "id": "template.node-python-blender",
-      "kind": "template",
-      "path": "templates/workflows/node-python-blender.yml",
-      "interface_version": "1",
-      "compatibility": "breaking_requires_version_boundary"
-    }
+    {"id":"agent.operating-contract","kind":"contract","path":"agent/operating-contract-v1.md","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"schema.engineering-policy","kind":"schema","path":"schemas/engineering-policy-v1.schema.json","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"schema.repository-profile","kind":"schema","path":"schemas/repository-profile-v1.schema.json","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"schema.architecture-decision","kind":"schema","path":"schemas/architecture-decision-v1.schema.json","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"schema.architecture-rule-registry","kind":"schema","path":"schemas/architecture-rule-registry-v1.schema.json","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"schema.validation-capability-registry","kind":"schema","path":"schemas/validation-capability-registry-v1.schema.json","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"schema.validation-capability-evidence","kind":"schema","path":"schemas/validation-capability-evidence-v1.schema.json","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"schema.verification-report","kind":"schema","path":"schemas/verification-report-v1.schema.json","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"profile.node","kind":"profile","path":"profiles/capabilities/node.json","interface_version":"1.0.0","identifier":"capability.node","compatibility":"stable_identifier"},
+    {"id":"profile.python","kind":"profile","path":"profiles/capabilities/python.json","interface_version":"1.0.0","identifier":"capability.python","compatibility":"stable_identifier"},
+    {"id":"profile.blender","kind":"profile","path":"profiles/capabilities/blender.json","interface_version":"1.0.0","identifier":"capability.blender","compatibility":"stable_identifier"},
+    {"id":"profile.browser-e2e","kind":"profile","path":"profiles/capabilities/browser-e2e.json","interface_version":"1.0.0","identifier":"capability.browser-e2e","compatibility":"stable_identifier"},
+    {"id":"profile.http-contract","kind":"profile","path":"profiles/capabilities/http-contract.json","interface_version":"1.0.0","identifier":"capability.http-contract","compatibility":"stable_identifier"},
+    {"id":"profile.container-integration","kind":"profile","path":"profiles/capabilities/container-integration.json","interface_version":"1.0.0","identifier":"capability.container-integration","compatibility":"stable_identifier"},
+    {"id":"profile.node-python","kind":"profile","path":"profiles/node-python.json","interface_version":"1.0.0","identifier":"node-python","compatibility":"stable_identifier"},
+    {"id":"profile.node-python-blender","kind":"profile","path":"profiles/node-python-blender.json","interface_version":"1.0.0","identifier":"node-python-blender","compatibility":"stable_identifier"},
+    {"id":"workflow.consumer-ci","kind":"workflow","path":".github/workflows/reusable-consumer-ci.yml","interface_version":"1","compatibility":"stable_public_interface","public_inputs":["mode","enable_node","enable_python","enable_blender","node_version","python_version","node_working_directory","python_working_directory","blender_working_directory","node_install_command","node_test_command","node_build_command","python_install_command","python_test_command","python_build_command","install_uv","blender_install_command","blender_test_command","node_cache","node_package_manager","node_cache_dependency_path","python_cache","python_cache_dependency_path","artifact_paths","artifact_retention_days","timeout_minutes"],"stable_job_names":["Platform Consumer CI"]},
+    {"id":"template.node-python","kind":"template","path":"templates/workflows/node-python.yml","interface_version":"1","compatibility":"breaking_requires_version_boundary"},
+    {"id":"template.node-python-blender","kind":"template","path":"templates/workflows/node-python-blender.yml","interface_version":"1","compatibility":"breaking_requires_version_boundary"}
   ],
   "deprecations": []
 }
