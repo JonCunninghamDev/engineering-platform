@@ -1,0 +1,24 @@
+{
+  "platform": {
+    "repository": "platform-owner/engineering-platform",
+    "version": "v1.0.0",
+    "commit": "b107c9306161b395cbcaffebb55e47850b999560"
+  },
+  "profiles": ["node-python"],
+  "local_steering": {
+    "files": ["AGENTS.md", "vendor/engineering-platform/operating-contract-v1.md"],
+    "runtime_platform_access_required": false
+  },
+  "reusable_ci": {
+    "workflow": ".github/workflows/reusable-consumer-ci.yml",
+    "pin": "b107c9306161b395cbcaffebb55e47850b999560",
+    "capabilities": ["node", "python"]
+  },
+  "upgrade": {
+    "from": "v0.1.0",
+    "to": "v1.0.0",
+    "compatibility_impact": "major-version-boundary",
+    "validation_evidence": ["complete-required-suite", "consumer-ci"],
+    "rollback": "restore previous immutable platform pin and synchronized local steering"
+  }
+}
