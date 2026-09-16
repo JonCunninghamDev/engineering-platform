@@ -14,16 +14,24 @@ REQUIRED_FILES = {
     "AGENTS.md",
     "VERSION",
     "CHANGELOG.md",
+    "engineering-policy.json",
     "docs/task-management.md",
     "docs/adoption.md",
     "agent/README.md",
+    "agent/adapters/README.md",
     "standards/README.md",
+    "standards/fast-feedback-v1.json",
     "schemas/README.md",
     "profiles/README.md",
     "templates/README.md",
     "actions/README.md",
     "tests/README.md",
     "scripts/validate-pr-policy.py",
+    "scripts/validate-protected-paths.py",
+    "scripts/validate_agent_command.py",
+    "scripts/run_fast_feedback.py",
+    "scripts/install-hooks.sh",
+    ".githooks/pre-commit",
     ".github/pull_request_template.md",
     ".github/workflows/ci.yml",
     ".github/workflows/release.yml",
@@ -31,6 +39,7 @@ REQUIRED_FILES = {
 
 REQUIRED_DIRECTORIES = {
     "agent",
+    "agent/adapters",
     "standards",
     "schemas",
     "profiles",
@@ -40,6 +49,7 @@ REQUIRED_DIRECTORIES = {
     "docs/releases",
     "tests",
     "scripts",
+    ".githooks",
     ".github/workflows",
 }
 
@@ -133,7 +143,29 @@ def validate(root: Path) -> list[str]:
     require_phrases(
         root,
         ci_workflow,
-        ("fetch-depth: 0", "validate-pr-policy.py", "unittest discover"),
+        (
+            "fetch-depth: 0",
+            "validate-pr-policy.py",
+            "validate-protected-paths.py",
+            "run_fast_feedback.py --stage pre_commit",
+            "run_fast_feedback.py --stage completion_gate",
+        ),
+        errors,
+    )
+
+    pre_commit = root / ".githooks" / "pre-commit"
+    require_phrases(
+        root,
+        pre_commit,
+        ("run_fast_feedback.py", "--stage pre_commit"),
+        errors,
+    )
+
+    install_hooks = root / "scripts" / "install-hooks.sh"
+    require_phrases(
+        root,
+        install_hooks,
+        ("core.hooksPath .githooks",),
         errors,
     )
 
