@@ -12,6 +12,8 @@ from typing import Any
 
 AUTHORIZATION_MARKER = "policy change authorization: approved"
 ISSUE_BRANCH = re.compile(r"^(?:agent|feature|fix)/issue-([0-9]+)(?:-|$)")
+RELEASE_HEAD = "develop"
+RELEASE_BASE = "main"
 
 
 class ProtectedPathError(ValueError):
@@ -56,12 +58,14 @@ def validate(
     policy: dict[str, Any],
     changed_files: list[str] | tuple[str, ...],
     head: str,
+    base: str = "",
     issue_body: str,
 ) -> dict[str, Any]:
     patterns = list(policy["protected_paths"])
     protected = protected_matches(changed_files, patterns)
     branch_match = ISSUE_BRANCH.match(head)
     issue_number = int(branch_match.group(1)) if branch_match else None
+    release_route = head == RELEASE_HEAD and base == RELEASE_BASE
     authorized = bool(
         protected
         and issue_number is not None
@@ -69,10 +73,12 @@ def validate(
     )
 
     errors: list[str] = []
-    if protected and issue_number is None:
+    if protected and release_route:
+        pass
+    elif protected and issue_number is None:
         errors.append(
-            "protected paths changed but feature branch does not identify an issue as "
-            "agent/issue-N-..., feature/issue-N-..., or fix/issue-N-..."
+            "protected paths changed but branch is neither the governed develop-to-main release route "
+            "nor an issue branch identifying agent/issue-N-..., feature/issue-N-..., or fix/issue-N-..."
         )
     elif protected and not authorized:
         errors.append(
@@ -85,6 +91,8 @@ def validate(
         "schema_version": "protected-path-evidence/v1",
         "status": "passed" if not errors else "failed",
         "head": head,
+        "base": base,
+        "release_route": release_route,
         "issue_number": issue_number,
         "authorization_marker_present": AUTHORIZATION_MARKER in issue_body.lower(),
         "protected_files": protected,
@@ -96,6 +104,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Validate protected Engineering Platform paths")
     parser.add_argument("--policy", type=Path, required=True)
     parser.add_argument("--head", required=True)
+    parser.add_argument("--base", default="")
     parser.add_argument("--changed-file", action="append", default=[])
     parser.add_argument("--changed-files-file", type=Path)
     parser.add_argument("--issue-body-file", type=Path)
@@ -118,6 +127,7 @@ def main(argv: list[str] | None = None) -> int:
             policy=policy,
             changed_files=changed_files,
             head=args.head,
+            base=args.base,
             issue_body=issue_body,
         )
     except (ProtectedPathError, OSError) as exc:
@@ -128,10 +138,13 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(evidence, indent=2, sort_keys=True))
     elif evidence["status"] == "passed":
         if evidence["protected_files"]:
-            print(
-                f"protected-path validation passed for issue #{evidence['issue_number']}: "
-                + ", ".join(evidence["protected_files"])
-            )
+            if evidence["release_route"]:
+                print("protected-path validation passed for governed develop-to-main release route: " + ", ".join(evidence["protected_files"]))
+            else:
+                print(
+                    f"protected-path validation passed for issue #{evidence['issue_number']}: "
+                    + ", ".join(evidence["protected_files"])
+                )
         else:
             print("protected-path validation passed: no protected files changed")
     else:
