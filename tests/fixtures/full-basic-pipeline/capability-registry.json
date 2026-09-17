@@ -1,0 +1,17 @@
+{
+  "schema_version": "capability-registry/v1",
+  "capabilities": [
+    {
+      "name": "engineering.implement",
+      "provider": "builder",
+      "description": "Produce bounded candidate change evidence for an engineering request.",
+      "trigger_terms": ["implement", "module"],
+      "dependencies": [],
+      "inputs": ["request", "scope"],
+      "outputs": ["change_set"],
+      "risk": "low",
+      "minimum_tier": "basic",
+      "human_gate": true
+    }
+  ]
+}
