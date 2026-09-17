@@ -2,7 +2,7 @@
   "schema_version": "agent-role/v1",
   "role": "context",
   "version": "1.0.0",
-  "purpose": "Assemble and normalize sufficient scoped context before downstream orchestration.",
+  "purpose": "Assemble and normalize sufficient scoped context before downstream orchestration, including repository-local specification readiness when repository context is supplied.",
   "dimensions": {
     "service_tier": ["basic", "managed", "full"],
     "autonomy": ["advisory", "supervised", "policy"],
@@ -17,6 +17,9 @@
         "identify_missing_context",
         "detect_explicit_conflicts",
         "formulate_blocking_questions",
+        "inspect_repository_context",
+        "evaluate_spec_readiness",
+        "draft_spec_remediation",
         "produce_context_manifest"
       ]
     },
