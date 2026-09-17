@@ -1,0 +1,8 @@
+{
+  "schema_version": "context-input/v1",
+  "goal": "Implement a bounded greeting module demonstration.",
+  "context": [
+    {"key": "request", "value": "implement greeting module", "source": "human", "confidence": "high"},
+    {"key": "scope", "value": "src/", "source": "human", "confidence": "high"}
+  ]
+}
