@@ -1,0 +1,8 @@
+{
+  "schema_version": "context-contract/v1",
+  "workflow": "generic_engineering_change",
+  "fields": [
+    {"key": "request", "requirement": "required", "prompt": "What bounded engineering change is requested?"},
+    {"key": "scope", "requirement": "required", "prompt": "What repository-relative scope is allowed?"}
+  ]
+}
