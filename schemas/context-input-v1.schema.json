@@ -22,6 +22,25 @@
           "observed_at": {"type": ["string", "null"]}
         }
       }
+    },
+    "repository": {
+      "type": "object",
+      "required": ["provider", "identifier", "ref"],
+      "additionalProperties": false,
+      "properties": {
+        "provider": {"type": "string", "minLength": 1},
+        "identifier": {"type": "string", "minLength": 1},
+        "ref": {"type": "string", "minLength": 1},
+        "manifest_path": {"type": "string", "minLength": 1},
+        "feature_spec": {"type": ["string", "null"], "minLength": 1},
+        "bootstrap": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowed": {"type": "boolean"}
+          }
+        }
+      }
     }
   }
 }

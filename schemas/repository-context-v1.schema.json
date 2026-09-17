@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/repository-context-v1.schema.json",
+  "title": "Repository Context v1",
+  "type": "object",
+  "required": ["schema_version", "specs", "feature_specs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "repository-context/v1"},
+    "specs": {
+      "type": "object",
+      "required": ["product", "architecture"],
+      "additionalProperties": false,
+      "properties": {
+        "product": {"$ref": "#/$defs/spec"},
+        "architecture": {"$ref": "#/$defs/spec"}
+      }
+    },
+    "feature_specs": {
+      "type": "object",
+      "required": ["directory", "required_for_feature_work"],
+      "additionalProperties": false,
+      "properties": {
+        "directory": {"type": "string", "minLength": 1},
+        "required_for_feature_work": {"type": "boolean"}
+      }
+    },
+    "decisions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "directory": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "$defs": {
+    "spec": {
+      "type": "object",
+      "required": ["path", "required"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "required": {"type": "boolean"}
+      }
+    }
+  }
+}

@@ -5,8 +5,9 @@ Versioned machine-readable contracts belong here.
 ## Current schemas
 
 - `context-contract-v1.schema.json` defines the required, recommended, and optional context fields for a workflow.
-- `context-input-v1.schema.json` defines human/system-supplied context items and provenance metadata for a Context Agent run.
-- `context-manifest-v1.schema.json` defines the Context Agent handoff, including readiness, normalized context, tier/autonomy/mode, provenance, capability evidence, and handoff permission.
+- `context-input-v1.schema.json` defines human/system-supplied context items and provenance metadata for a Context Agent run. It also supports optional repository linkage for repository-aware Context preparation.
+- `context-manifest-v1.schema.json` defines the Context Agent handoff, including readiness, normalized context, tier/autonomy/mode, provenance, capability evidence, handoff permission, and optional repository/spec-readiness evidence.
+- `repository-context-v1.schema.json` defines a consumer repository's declaration of authoritative product, architecture, and feature-spec locations without embedding product identity in the platform.
 - `capability-registry-v1.schema.json` defines capabilities available to orchestration, including provider, trigger signals, dependencies, inputs, outputs, risk, tier availability, and human-gate requirements.
 - `execution-plan-v1.schema.json` defines the Basic Orchestrator plan, selected/skipped capabilities, dependency-aware ordering, zero-dispatch evidence, and downstream handoff.
 - `builder-task-v1.schema.json` defines an explicit Builder assignment linked to a selected execution-plan capability, including allowed/protected path scope and bounded create/update candidate contents.

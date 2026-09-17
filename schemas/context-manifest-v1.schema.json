@@ -18,7 +18,45 @@
     },
     "readiness": {
       "type": "object",
-      "required": ["ready_for_orchestration", "missing_required", "missing_recommended", "blocking_conflicts", "nonblocking_conflicts"]
+      "required": ["ready_for_orchestration", "missing_required", "missing_recommended", "blocking_conflicts", "nonblocking_conflicts"],
+      "properties": {
+        "ready_for_orchestration": {"type": "boolean"},
+        "missing_required": {"type": "array"},
+        "missing_recommended": {"type": "array"},
+        "blocking_conflicts": {"type": "array"},
+        "nonblocking_conflicts": {"type": "array"},
+        "repository_specs_ready": {"type": "boolean"}
+      }
+    },
+    "repository_context": {
+      "type": "object",
+      "required": ["repository", "manifest", "specs", "spec_readiness", "remediation", "questions_for_human"],
+      "properties": {
+        "repository": {
+          "type": "object",
+          "required": ["provider", "identifier", "ref"]
+        },
+        "manifest": {
+          "type": "object",
+          "required": ["path", "status"]
+        },
+        "specs": {"type": "array"},
+        "spec_readiness": {
+          "type": "object",
+          "required": ["ready", "missing", "invalid", "draft"],
+          "properties": {
+            "ready": {"type": "boolean"},
+            "missing": {"type": "array"},
+            "invalid": {"type": "array"},
+            "draft": {"type": "array"}
+          }
+        },
+        "remediation": {
+          "type": "object",
+          "required": ["required", "action", "draft_artifacts", "assumptions"]
+        },
+        "questions_for_human": {"type": "array"}
+      }
     },
     "handoff": {
       "type": "object",
