@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from jsonschema import Draft202012Validator
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
@@ -24,6 +26,9 @@ assert ORCH_SPEC and ORCH_SPEC.loader
 sys.modules["orchestrator_agent"] = orchestrator_agent
 ORCH_SPEC.loader.exec_module(orchestrator_agent)
 
+INPUT_SCHEMA = json.loads((ROOT / "schemas/context-input-v1.schema.json").read_text(encoding="utf-8"))
+MANIFEST_SCHEMA = json.loads((ROOT / "schemas/context-manifest-v1.schema.json").read_text(encoding="utf-8"))
+REPOSITORY_SCHEMA = json.loads((ROOT / "schemas/repository-context-v1.schema.json").read_text(encoding="utf-8"))
 
 CONTRACT = {
     "schema_version": "context-contract/v1",
@@ -61,25 +66,25 @@ def payload(*, bootstrap: bool = False, feature_spec: str | None = "ai/specs/fea
     }
 
 
+def repository_manifest() -> dict:
+    return {
+        "schema_version": "repository-context/v1",
+        "specs": {
+            "product": {"path": "ai/project/product.md", "required": True},
+            "architecture": {"path": "ai/project/architecture.md", "required": True},
+        },
+        "feature_specs": {
+            "directory": "ai/specs",
+            "required_for_feature_work": True,
+        },
+    }
+
+
 def write_complete_repo(root: Path, *, feature_status: str = "authoritative") -> None:
     (root / "ai/project").mkdir(parents=True, exist_ok=True)
     (root / "ai/specs").mkdir(parents=True, exist_ok=True)
     (root / "ai/project-context.json").write_text(
-        json.dumps(
-            {
-                "schema_version": "repository-context/v1",
-                "specs": {
-                    "product": {"path": "ai/project/product.md", "required": True},
-                    "architecture": {"path": "ai/project/architecture.md", "required": True},
-                },
-                "feature_specs": {
-                    "directory": "ai/specs",
-                    "required_for_feature_work": True,
-                },
-            },
-            indent=2,
-        )
-        + "\n",
+        json.dumps(repository_manifest(), indent=2) + "\n",
         encoding="utf-8",
     )
     (root / "ai/project/product.md").write_text(
@@ -106,11 +111,22 @@ class RepositoryContextTests(unittest.TestCase):
             created_at="2026-09-17T15:00:00+00:00",
         )
 
+    def test_repository_linkage_is_additive_to_context_input_schema(self):
+        linked = payload()
+        Draft202012Validator(INPUT_SCHEMA).validate(linked)
+        legacy = payload()
+        legacy.pop("repository")
+        Draft202012Validator(INPUT_SCHEMA).validate(legacy)
+
+    def test_repository_context_manifest_schema_accepts_declared_spec_locations(self):
+        Draft202012Validator(REPOSITORY_SCHEMA).validate(repository_manifest())
+
     def test_complete_authoritative_specs_allow_orchestration(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             write_complete_repo(root)
             manifest, report, drafts = self.run_context(root, payload())
+            Draft202012Validator(MANIFEST_SCHEMA).validate(manifest)
             self.assertTrue(manifest["readiness"]["ready_for_orchestration"])
             self.assertTrue(manifest["readiness"]["repository_specs_ready"])
             self.assertTrue(manifest["handoff"]["allowed"])
@@ -124,6 +140,7 @@ class RepositoryContextTests(unittest.TestCase):
             write_complete_repo(root)
             (root / "ai/specs/feature.md").unlink()
             manifest, report, drafts = self.run_context(root, payload(bootstrap=True))
+            Draft202012Validator(MANIFEST_SCHEMA).validate(manifest)
             self.assertFalse(manifest["handoff"]["allowed"])
             self.assertIn("repository_specs", manifest["readiness"]["missing_required"])
             self.assertEqual(report["repository_context"]["remediation"]["action"], "review_and_apply_generated_drafts")
@@ -181,6 +198,7 @@ class RepositoryContextTests(unittest.TestCase):
             run_id="legacy-test",
             created_at="2026-09-17T15:00:00+00:00",
         )
+        Draft202012Validator(MANIFEST_SCHEMA).validate(manifest)
         self.assertTrue(manifest["handoff"]["allowed"])
         self.assertNotIn("repository_context", manifest)
         self.assertEqual(report["status"], "complete")
