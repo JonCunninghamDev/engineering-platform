@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import re
 from pathlib import PurePosixPath, Path
 from typing import Any
 
@@ -12,6 +13,7 @@ ENVELOPE_SCHEMA = "execution-envelope/v1"
 WORKER_RESULT_SCHEMA = "worker-execution-result/v1"
 WORKER_VERIFICATION_SCHEMA = "worker-verification/v1"
 DELIVERY_GATE_SCHEMA = "delivery-gate/v1"
+COMMIT_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
 class GovernedExecutionError(ValueError):
@@ -35,6 +37,25 @@ def _string_list(value: Any, label: str, *, allow_empty: bool = True) -> list[st
     if len(rows) != len(set(rows)):
         raise GovernedExecutionError(f"{label} must not contain duplicates")
     return rows
+
+
+def _commit_sha(value: Any, label: str) -> str:
+    sha = _string(value, label)
+    if not COMMIT_SHA.fullmatch(sha):
+        raise GovernedExecutionError(f"{label} must be a 40-character lowercase Git commit SHA")
+    return sha
+
+
+def _non_negative_int(value: Any, label: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise GovernedExecutionError(f"{label} must be a non-negative integer")
+    return value
+
+
+def _non_negative_number(value: Any, label: str) -> float:
+    if not isinstance(value, (int, float)) or isinstance(value, bool) or value < 0:
+        raise GovernedExecutionError(f"{label} must be a non-negative number")
+    return float(value)
 
 
 def _safe_repo_path(value: str, label: str) -> str:
@@ -118,6 +139,7 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
     run_id = _string(request.get("run_id"), "request.run_id")
     repository_id = _string(repository.get("identifier"), "request.repository.identifier")
     base_ref = _string(repository.get("base_ref"), "request.repository.base_ref")
+    base_commit = _commit_sha(repository.get("base_commit"), "request.repository.base_commit")
     target_ref = _string(repository.get("target_ref"), "request.repository.target_ref")
     feature_branch = _string(repository.get("feature_branch"), "request.repository.feature_branch")
     issue = _string(task.get("issue"), "request.task.issue")
@@ -209,6 +231,7 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
         "repository": {
             "identifier": repository_id,
             "base_ref": base_ref,
+            "base_commit": base_commit,
             "target_ref": target_ref,
             "release_ref": release,
             "feature_branch": feature_branch,
@@ -260,8 +283,49 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
         raise GovernedExecutionError(f"worker result schema_version must be {WORKER_RESULT_SCHEMA}")
     if result.get("run_id") != envelope.get("run_id"):
         raise GovernedExecutionError("worker result run_id does not match execution envelope")
-    if result.get("branch") != envelope["repository"]["feature_branch"]:
-        raise GovernedExecutionError("worker result branch does not match authorized feature branch")
+
+    executor = result.get("executor")
+    repository = result.get("repository")
+    budget = result.get("budget")
+    security = result.get("security")
+    for label, value in (
+        ("worker_result.executor", executor),
+        ("worker_result.repository", repository),
+        ("worker_result.budget", budget),
+        ("worker_result.security", security),
+    ):
+        if not isinstance(value, dict):
+            raise GovernedExecutionError(f"{label} must be an object")
+
+    adapter = _string(executor.get("adapter"), "worker_result.executor.adapter")
+    provider = _string(executor.get("provider"), "worker_result.executor.provider")
+    execution_id = _string(executor.get("execution_id"), "worker_result.executor.execution_id")
+    violations: list[str] = []
+    if adapter != envelope["worker"]["adapter"]:
+        violations.append("executor adapter does not match authorized worker adapter")
+    if provider != envelope["worker"]["provider"]:
+        violations.append("executor provider does not match authorized worker provider")
+
+    repository_id = _string(repository.get("identifier"), "worker_result.repository.identifier")
+    base_commit = _commit_sha(repository.get("base_commit"), "worker_result.repository.base_commit")
+    branch = _string(repository.get("branch"), "worker_result.repository.branch")
+    head_commit = _commit_sha(repository.get("head_commit"), "worker_result.repository.head_commit")
+    commits = [
+        _commit_sha(value, f"worker_result.repository.commits[{index}]")
+        for index, value in enumerate(
+            _string_list(repository.get("commits"), "worker_result.repository.commits", allow_empty=False)
+        )
+    ]
+    if repository_id != envelope["repository"]["identifier"]:
+        violations.append("worker result repository does not match execution envelope")
+    if base_commit != envelope["repository"]["base_commit"]:
+        violations.append("worker result base commit does not match authorized base commit")
+    if branch != envelope["repository"]["feature_branch"]:
+        violations.append("worker result branch does not match authorized feature branch")
+    if commits[-1] != head_commit:
+        violations.append("worker result head_commit must equal the final reported commit")
+    if head_commit == base_commit:
+        violations.append("worker result must advance beyond the authorized base commit")
 
     changed_paths = result.get("changed_paths")
     if not isinstance(changed_paths, list) or not changed_paths:
@@ -270,9 +334,10 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
         _safe_repo_path(value, f"worker_result.changed_paths[{index}]")
         for index, value in enumerate(changed_paths)
     ]
+    if len(normalized_paths) != len(set(normalized_paths)):
+        raise GovernedExecutionError("worker result changed_paths must not contain duplicates")
     allowed_patterns = envelope["scope"]["allowed_paths"]
     protected_patterns = envelope["scope"]["protected_paths"]
-    violations: list[str] = []
     for path in normalized_paths:
         if not _allowed(path, allowed_patterns):
             violations.append(f"outside allowed scope: {path}")
@@ -288,6 +353,44 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
     if result.get("direct_shared_branch_writes", 0) != 0:
         violations.append("worker recorded direct writes to a shared branch")
 
+    attempted = _string_list(
+        security.get("consequential_actions_attempted", []),
+        "worker_result.security.consequential_actions_attempted",
+    )
+    blocked = _string_list(
+        security.get("consequential_actions_blocked", []),
+        "worker_result.security.consequential_actions_blocked",
+    )
+    unblocked = sorted(set(attempted) - set(blocked))
+    if unblocked:
+        violations.append(
+            "consequential actions were attempted without block evidence: " + ", ".join(unblocked)
+        )
+
+    steps = _non_negative_int(budget.get("steps"), "worker_result.budget.steps")
+    elapsed_ms = _non_negative_int(budget.get("elapsed_ms"), "worker_result.budget.elapsed_ms")
+    retries = _non_negative_int(budget.get("retries"), "worker_result.budget.retries")
+    cost_usd_raw = budget.get("cost_usd")
+    cost_usd = (
+        None
+        if cost_usd_raw is None
+        else _non_negative_number(cost_usd_raw, "worker_result.budget.cost_usd")
+    )
+    configured = envelope.get("budgets", {})
+    if isinstance(configured.get("max_steps"), int) and steps > configured["max_steps"]:
+        violations.append("worker exceeded max_steps budget")
+    max_elapsed = configured.get("max_elapsed_minutes")
+    if isinstance(max_elapsed, (int, float)) and elapsed_ms > float(max_elapsed) * 60_000:
+        violations.append("worker exceeded max_elapsed_minutes budget")
+    if isinstance(configured.get("max_retries"), int) and retries > configured["max_retries"]:
+        violations.append("worker exceeded max_retries budget")
+    max_cost = configured.get("max_cost_usd")
+    if isinstance(max_cost, (int, float)):
+        if cost_usd is None:
+            violations.append("worker omitted cost evidence required by max_cost_usd budget")
+        elif cost_usd > float(max_cost):
+            violations.append("worker exceeded max_cost_usd budget")
+
     checks = result.get("verification", [])
     if not isinstance(checks, list):
         raise GovernedExecutionError("worker_result.verification must be a list")
@@ -302,17 +405,40 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
             raise GovernedExecutionError(f"worker_result.verification[{index}].status is unsupported")
         if name in check_map:
             raise GovernedExecutionError(f"duplicate worker verification check: {name}")
+        duration_ms = _non_negative_int(
+            check.get("duration_ms"), f"worker_result.verification[{index}].duration_ms"
+        )
+        exit_code = check.get("exit_code")
         evidence = check.get("evidence")
         if status == "passed":
+            if not isinstance(exit_code, int) or isinstance(exit_code, bool) or exit_code != 0:
+                raise GovernedExecutionError(
+                    f"worker_result.verification[{index}].exit_code must be 0 for passed checks"
+                )
             evidence_map[name] = _string(
                 evidence,
                 f"worker_result.verification[{index}].evidence",
             )
-        elif evidence is not None:
-            evidence_map[name] = _string(
-                evidence,
-                f"worker_result.verification[{index}].evidence",
-            )
+        elif status == "failed":
+            if not isinstance(exit_code, int) or isinstance(exit_code, bool) or exit_code == 0:
+                raise GovernedExecutionError(
+                    f"worker_result.verification[{index}].exit_code must be non-zero for failed checks"
+                )
+            if evidence is not None:
+                evidence_map[name] = _string(
+                    evidence,
+                    f"worker_result.verification[{index}].evidence",
+                )
+        else:
+            if exit_code is not None:
+                raise GovernedExecutionError(
+                    f"worker_result.verification[{index}].exit_code must be null for unavailable checks"
+                )
+            if evidence is not None:
+                evidence_map[name] = _string(
+                    evidence,
+                    f"worker_result.verification[{index}].evidence",
+                )
         check_map[name] = status
 
     missing_pre_pr = [
@@ -327,6 +453,18 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
         "schema_version": WORKER_VERIFICATION_SCHEMA,
         "run_id": envelope["run_id"],
         "status": "verified" if passed else "rejected",
+        "executor": {
+            "adapter": adapter,
+            "provider": provider,
+            "execution_id": execution_id,
+        },
+        "repository": {
+            "identifier": repository_id,
+            "base_commit": base_commit,
+            "branch": branch,
+            "head_commit": head_commit,
+            "commits": commits,
+        },
         "scope": {
             "changed_paths": normalized_paths,
             "violations": violations,
@@ -336,12 +474,21 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
             "required_pre_pr": envelope["verification"]["pre_pr_checks"],
             "evidence": evidence_map,
         },
+        "budget": {
+            "steps": steps,
+            "elapsed_ms": elapsed_ms,
+            "retries": retries,
+            "cost_usd": cost_usd,
+        },
+        "security": {
+            "consequential_actions_attempted": attempted,
+            "consequential_actions_blocked": blocked,
+        },
         "delivery": {
             "pr_creation_allowed": passed,
             "merge_allowed": False,
         },
     }
-
 
 def evaluate_delivery_gate(
     envelope: dict[str, Any],
