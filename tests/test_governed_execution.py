@@ -26,7 +26,7 @@ def policy():
         "review": {
             "pull_requests_required": True,
             "required_checks": ["CI / check"],
-            "human_approval_for": [],
+            "human_approval_for": ["release", "credentials"],
         },
         "delivery": {
             "implementation_target": "integration",
@@ -85,6 +85,7 @@ def request():
             "protected_paths": [],
         },
         "verification": {"pre_pr_checks": []},
+        "change_classes": ["visual_change"],
         "human_gates": ["visual_acceptance"],
     }
 
@@ -109,6 +110,15 @@ class GovernedExecutionTests(unittest.TestCase):
         self.assertEqual(["CI / check"], envelope["verification"]["required_ci_checks"])
         self.assertIn("visual_acceptance", envelope["human_gates"])
         self.assertFalse(envelope["delivery"]["release_write_allowed"])
+
+    def test_only_applicable_policy_categories_become_human_gates(self):
+        envelope = module.authorize_execution(policy(), request())
+        self.assertEqual(["visual_acceptance"], envelope["human_gates"])
+
+        candidate = request()
+        candidate["change_classes"] = ["credentials"]
+        envelope = module.authorize_execution(policy(), candidate)
+        self.assertEqual(["credentials", "visual_acceptance"], envelope["human_gates"])
 
     def test_rejects_direct_release_or_wrong_branch_route(self):
         candidate = request()

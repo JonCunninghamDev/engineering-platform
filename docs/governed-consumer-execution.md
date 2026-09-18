@@ -19,7 +19,7 @@ The envelope is a policy decision, not a worker implementation. It freezes:
 - requested and authorized actions;
 - allowed and protected repository paths;
 - required CI checks;
-- explicit human gates;
+- explicit task human gates plus only those policy approval categories applicable to the request's declared change classes;
 - execution budgets;
 - worker adapter/provider identity;
 - Engineering Run ledger identity.
@@ -34,8 +34,9 @@ Authorization does not mean merge authority.
 2. The worker performs only the authorized task on the feature branch.
 3. `verify_worker_result` independently checks branch identity, changed paths, actions, protected paths, shared-branch writes, and any required pre-PR evidence.
 4. A verified worker result permits PR creation.
-5. `evaluate_delivery_gate` requires every consumer CI check and every human gate before merge authority becomes true.
-6. Release writes remain false in this execution envelope. Production promotion is a separate consumer release decision.
+5. Policy `human_approval_for` entries are approval categories, not universal gates. Only categories declared by the request's `change_classes` become gates, plus any explicit task-level `human_gates`.
+6. `evaluate_delivery_gate` requires every consumer CI check and every applicable human gate before merge authority becomes true.
+7. Release writes remain false in this execution envelope. Production promotion is a separate consumer release decision.
 
 This separation lets a visual consumer feature reach a green PR while still stopping for human experiential acceptance.
 
