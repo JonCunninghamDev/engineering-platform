@@ -136,10 +136,21 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
         _safe_repo_path(value, f"request.scope.protected_paths[{index}]")
         for index, value in enumerate(_string_list(scope.get("protected_paths", []), "request.scope.protected_paths"))
     ]
-    pre_pr_checks = _string_list(
+    requested_pre_pr_checks = _string_list(
         request.get("verification", {}).get("pre_pr_checks", []),
         "request.verification.pre_pr_checks",
     ) if isinstance(request.get("verification", {}), dict) else []
+    validation = policy.get("validation", {})
+    raw_stages = validation.get("stages", []) if isinstance(validation, dict) else []
+    required_policy_checks: list[str] = []
+    for index, stage in enumerate(raw_stages):
+        if not isinstance(stage, dict):
+            raise GovernedExecutionError(f"policy.validation.stages[{index}] must be an object")
+        if stage.get("required") is True:
+            required_policy_checks.append(
+                _string(stage.get("id"), f"policy.validation.stages[{index}].id")
+            )
+    pre_pr_checks = list(dict.fromkeys(required_policy_checks + requested_pre_pr_checks))
     requested_human_gates = _string_list(
         request.get("human_gates", []), "request.human_gates"
     )
@@ -281,6 +292,7 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
     if not isinstance(checks, list):
         raise GovernedExecutionError("worker_result.verification must be a list")
     check_map: dict[str, str] = {}
+    evidence_map: dict[str, str] = {}
     for index, check in enumerate(checks):
         if not isinstance(check, dict):
             raise GovernedExecutionError(f"worker_result.verification[{index}] must be an object")
@@ -288,6 +300,19 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
         status = _string(check.get("status"), f"worker_result.verification[{index}].status")
         if status not in {"passed", "failed", "unavailable"}:
             raise GovernedExecutionError(f"worker_result.verification[{index}].status is unsupported")
+        if name in check_map:
+            raise GovernedExecutionError(f"duplicate worker verification check: {name}")
+        evidence = check.get("evidence")
+        if status == "passed":
+            evidence_map[name] = _string(
+                evidence,
+                f"worker_result.verification[{index}].evidence",
+            )
+        elif evidence is not None:
+            evidence_map[name] = _string(
+                evidence,
+                f"worker_result.verification[{index}].evidence",
+            )
         check_map[name] = status
 
     missing_pre_pr = [
@@ -309,6 +334,7 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
         "verification": {
             "reported": checks,
             "required_pre_pr": envelope["verification"]["pre_pr_checks"],
+            "evidence": evidence_map,
         },
         "delivery": {
             "pr_creation_allowed": passed,
