@@ -58,7 +58,16 @@ def policy():
             },
         },
         "protected_paths": [".github/**", "engineering-policy.json", "ai/project/**"],
-        "validation": {"stages": []},
+        "validation": {
+            "stages": [
+                {
+                    "id": "consumer-completion",
+                    "stage": "completion_gate",
+                    "capability": "test.node",
+                    "required": True,
+                }
+            ]
+        },
         "execution_budgets": {"max_steps": 120, "max_retries": 2},
     }
 
@@ -97,7 +106,13 @@ def result():
         "branch": "feature/issue-31-photorealistic-3d",
         "actions": ["code.write", "test.write"],
         "changed_paths": ["src/globeRenderer.ts", "tests/scenePlan.test.mjs"],
-        "verification": [],
+        "verification": [
+            {
+                "name": "consumer-completion",
+                "status": "passed",
+                "evidence": "process://npm-run-check/exit-0",
+            }
+        ],
         "direct_shared_branch_writes": 0,
     }
 
@@ -108,6 +123,7 @@ class GovernedExecutionTests(unittest.TestCase):
         self.assertTrue(envelope["authorization"]["allowed"])
         self.assertEqual("develop", envelope["repository"]["target_ref"])
         self.assertEqual(["CI / check"], envelope["verification"]["required_ci_checks"])
+        self.assertEqual(["consumer-completion"], envelope["verification"]["pre_pr_checks"])
         self.assertIn("visual_acceptance", envelope["human_gates"])
         self.assertFalse(envelope["delivery"]["release_write_allowed"])
 
@@ -162,9 +178,39 @@ class GovernedExecutionTests(unittest.TestCase):
         self.assertEqual("rejected", verification["status"])
 
         passed = result()
-        passed["verification"] = [{"name": "npm run check", "status": "passed"}]
+        passed["verification"].append({
+            "name": "npm run check",
+            "status": "passed",
+            "evidence": "process://npm-run-check/exit-0",
+        })
         verification = module.verify_worker_result(envelope, passed)
         self.assertEqual("verified", verification["status"])
+
+    def test_required_policy_validation_cannot_be_omitted_by_request(self):
+        candidate = request()
+        candidate["verification"]["pre_pr_checks"] = []
+        envelope = module.authorize_execution(policy(), candidate)
+        self.assertEqual(["consumer-completion"], envelope["verification"]["pre_pr_checks"])
+
+        missing = result()
+        missing["verification"] = []
+        verification = module.verify_worker_result(envelope, missing)
+        self.assertEqual("rejected", verification["status"])
+        self.assertTrue(any("consumer-completion" in row for row in verification["scope"]["violations"]))
+
+    def test_passed_verification_requires_concrete_evidence(self):
+        envelope = module.authorize_execution(policy(), request())
+        missing_evidence = result()
+        missing_evidence["verification"][0].pop("evidence")
+        with self.assertRaisesRegex(module.GovernedExecutionError, "evidence"):
+            module.verify_worker_result(envelope, missing_evidence)
+
+    def test_duplicate_verification_check_is_rejected(self):
+        envelope = module.authorize_execution(policy(), request())
+        duplicate = result()
+        duplicate["verification"].append(dict(duplicate["verification"][0]))
+        with self.assertRaisesRegex(module.GovernedExecutionError, "duplicate worker verification check"):
+            module.verify_worker_result(envelope, duplicate)
 
     def test_delivery_gate_requires_ci_and_human_gate(self):
         envelope = module.authorize_execution(policy(), request())
