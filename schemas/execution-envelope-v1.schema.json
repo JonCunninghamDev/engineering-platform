@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/execution-envelope-v1.schema.json",
+  "title": "Execution Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "repository",
+    "task",
+    "worker",
+    "authorization",
+    "scope",
+    "verification",
+    "human_gates",
+    "budgets",
+    "delivery",
+    "ledger"
+  ],
+  "properties": {
+    "schema_version": {"const": "execution-envelope/v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identifier", "base_ref", "target_ref", "release_ref", "feature_branch"],
+      "properties": {
+        "identifier": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+        "base_ref": {"type": "string", "minLength": 1},
+        "target_ref": {"type": "string", "minLength": 1},
+        "release_ref": {"type": "string", "minLength": 1},
+        "feature_branch": {"type": "string", "minLength": 1}
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issue", "goal", "task_class"],
+      "properties": {
+        "issue": {"type": "string", "minLength": 1},
+        "goal": {"type": "string", "minLength": 1},
+        "task_class": {"type": "string", "minLength": 1}
+      }
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "provider"],
+      "properties": {
+        "adapter": {"type": "string", "minLength": 1},
+        "provider": {"type": "string", "minLength": 1}
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "reasons", "authority_class", "requested_actions", "authorized_actions", "consequential_actions"],
+      "properties": {
+        "allowed": {"type": "boolean"},
+        "reasons": {"type": "array", "items": {"type": "string"}},
+        "authority_class": {"const": "bounded_write"},
+        "requested_actions": {"type": "array", "items": {"type": "string"}},
+        "authorized_actions": {"type": "array", "items": {"type": "string"}},
+        "consequential_actions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_paths", "protected_paths"],
+      "properties": {
+        "allowed_paths": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "protected_paths": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pre_pr_checks", "required_ci_checks"],
+      "properties": {
+        "pre_pr_checks": {"type": "array", "items": {"type": "string"}},
+        "required_ci_checks": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
+    },
+    "human_gates": {"type": "array", "items": {"type": "string"}},
+    "budgets": {"type": "object"},
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pr_required", "pr_creation_allowed", "merge_allowed", "release_write_allowed"],
+      "properties": {
+        "pr_required": {"type": "boolean"},
+        "pr_creation_allowed": {"const": false},
+        "merge_allowed": {"const": false},
+        "release_write_allowed": {"const": false}
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "run_id"],
+      "properties": {
+        "schema_version": {"const": "engineering-run/v1"},
+        "run_id": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
