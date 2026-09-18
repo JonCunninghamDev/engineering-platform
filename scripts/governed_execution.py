@@ -165,13 +165,36 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
     validation = policy.get("validation", {})
     raw_stages = validation.get("stages", []) if isinstance(validation, dict) else []
     required_policy_checks: list[str] = []
+    required_policy_commands: list[dict[str, Any]] = []
+    missing_policy_commands: list[str] = []
     for index, stage in enumerate(raw_stages):
         if not isinstance(stage, dict):
             raise GovernedExecutionError(f"policy.validation.stages[{index}] must be an object")
         if stage.get("required") is True:
-            required_policy_checks.append(
-                _string(stage.get("id"), f"policy.validation.stages[{index}].id")
-            )
+            stage_id = _string(stage.get("id"), f"policy.validation.stages[{index}].id")
+            required_policy_checks.append(stage_id)
+            command = stage.get("command")
+            if command is None:
+                missing_policy_commands.append(stage_id)
+            else:
+                required_policy_commands.append(
+                    {
+                        "id": stage_id,
+                        "stage": _string(
+                            stage.get("stage"),
+                            f"policy.validation.stages[{index}].stage",
+                        ),
+                        "capability": _string(
+                            stage.get("capability"),
+                            f"policy.validation.stages[{index}].capability",
+                        ),
+                        "command": _string_list(
+                            command,
+                            f"policy.validation.stages[{index}].command",
+                            allow_empty=False,
+                        ),
+                    }
+                )
     pre_pr_checks = list(dict.fromkeys(required_policy_checks + requested_pre_pr_checks))
     requested_human_gates = _string_list(
         request.get("human_gates", []), "request.human_gates"
@@ -184,6 +207,11 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
     integration = branches["integration"]
     release = branches["release"]
     reasons: list[str] = []
+    if missing_policy_commands:
+        reasons.append(
+            "required validation stages lack repository-owned command bindings: "
+            + ", ".join(missing_policy_commands)
+        )
     if base_ref != integration:
         reasons.append(f"base_ref must be integration branch {integration}")
     if target_ref != integration:
@@ -252,6 +280,7 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
         },
         "verification": {
             "pre_pr_checks": pre_pr_checks,
+            "pre_pr_commands": required_policy_commands,
             "required_ci_checks": required_ci_checks,
         },
         "human_gates": human_gates,

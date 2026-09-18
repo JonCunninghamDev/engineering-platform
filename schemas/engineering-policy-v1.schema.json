@@ -19,38 +19,73 @@
     "compatibility"
   ],
   "properties": {
-    "schema_version": {"const": "engineering-policy/v1"},
+    "schema_version": {
+      "const": "engineering-policy/v1"
+    },
     "platform": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["repository", "version", "commit"],
+      "required": [
+        "repository",
+        "version",
+        "commit"
+      ],
       "properties": {
-        "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
-        "version": {"type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"},
-        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+        "repository": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
       }
     },
     "repository": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["policy_id"],
+      "required": [
+        "policy_id"
+      ],
       "properties": {
-        "policy_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
-        "description": {"type": "string", "minLength": 1}
+        "policy_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "branches": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["release", "integration", "temporary_prefixes"],
+      "required": [
+        "release",
+        "integration",
+        "temporary_prefixes"
+      ],
       "properties": {
-        "release": {"$ref": "#/$defs/branchName"},
-        "integration": {"$ref": "#/$defs/branchName"},
+        "release": {
+          "$ref": "#/$defs/branchName"
+        },
+        "integration": {
+          "$ref": "#/$defs/branchName"
+        },
         "temporary_prefixes": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9._/-]+$"}
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9._/-]+$"
+          }
         }
       }
     },
@@ -58,28 +93,46 @@
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
-      "items": {"$ref": "#/$defs/profileId"}
+      "items": {
+        "$ref": "#/$defs/profileId"
+      }
     },
     "capabilities": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["toolchain", "tests"],
+      "required": [
+        "toolchain",
+        "tests"
+      ],
       "properties": {
-        "toolchain": {"$ref": "#/$defs/capabilityList"},
-        "tests": {"$ref": "#/$defs/capabilityList"}
+        "toolchain": {
+          "$ref": "#/$defs/capabilityList"
+        },
+        "tests": {
+          "$ref": "#/$defs/capabilityList"
+        }
       }
     },
     "review": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pull_requests_required", "required_checks", "human_approval_for"],
+      "required": [
+        "pull_requests_required",
+        "required_checks",
+        "human_approval_for"
+      ],
       "properties": {
-        "pull_requests_required": {"type": "boolean"},
+        "pull_requests_required": {
+          "type": "boolean"
+        },
         "required_checks": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"type": "string", "minLength": 1}
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "human_approval_for": {
           "type": "array",
@@ -102,48 +155,89 @@
     "delivery": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["implementation_target", "release_route", "direct_release_writes", "hotfix_route"],
+      "required": [
+        "implementation_target",
+        "release_route",
+        "direct_release_writes",
+        "hotfix_route"
+      ],
       "properties": {
-        "implementation_target": {"const": "integration"},
-        "release_route": {"const": "integration_to_release"},
-        "direct_release_writes": {"const": false},
-        "hotfix_route": {"const": "integration_first"}
+        "implementation_target": {
+          "const": "integration"
+        },
+        "release_route": {
+          "const": "integration_to_release"
+        },
+        "direct_release_writes": {
+          "const": false
+        },
+        "hotfix_route": {
+          "const": "integration_first"
+        }
       }
     },
     "permissions": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["read", "bounded_write", "consequential_write"],
+      "required": [
+        "read",
+        "bounded_write",
+        "consequential_write"
+      ],
       "properties": {
         "read": {
           "allOf": [
-            {"$ref": "#/$defs/permissionRule"},
+            {
+              "$ref": "#/$defs/permissionRule"
+            },
             {
               "properties": {
-                "tier": {"const": "autonomous"},
-                "risk": {"const": "low"}
+                "tier": {
+                  "const": "autonomous"
+                },
+                "risk": {
+                  "const": "low"
+                }
               }
             }
           ]
         },
         "bounded_write": {
           "allOf": [
-            {"$ref": "#/$defs/permissionRule"},
+            {
+              "$ref": "#/$defs/permissionRule"
+            },
             {
               "properties": {
-                "tier": {"const": "bounded"},
-                "risk": {"enum": ["low", "medium"]}
+                "tier": {
+                  "const": "bounded"
+                },
+                "risk": {
+                  "enum": [
+                    "low",
+                    "medium"
+                  ]
+                }
               }
             }
           ]
         },
         "consequential_write": {
           "allOf": [
-            {"$ref": "#/$defs/permissionRule"},
+            {
+              "$ref": "#/$defs/permissionRule"
+            },
             {
               "properties": {
-                "tier": {"const": "approval_required"},
-                "risk": {"enum": ["high", "critical"]}
+                "tier": {
+                  "const": "approval_required"
+                },
+                "risk": {
+                  "enum": [
+                    "high",
+                    "critical"
+                  ]
+                }
               }
             }
           ]
@@ -153,24 +247,54 @@
     "protected_paths": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"$ref": "#/$defs/repositoryPathPattern"}
+      "items": {
+        "$ref": "#/$defs/repositoryPathPattern"
+      }
     },
     "validation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["stages"],
+      "required": [
+        "stages"
+      ],
       "properties": {
         "stages": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "stage", "capability", "required"],
+            "required": [
+              "id",
+              "stage",
+              "capability",
+              "required"
+            ],
             "properties": {
-              "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
-              "stage": {"enum": ["after_write", "pre_commit", "completion_gate"]},
-              "capability": {"$ref": "#/$defs/capabilityId"},
-              "required": {"type": "boolean"}
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._-]*$"
+              },
+              "stage": {
+                "enum": [
+                  "after_write",
+                  "pre_commit",
+                  "completion_gate"
+                ]
+              },
+              "capability": {
+                "$ref": "#/$defs/capabilityId"
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "command": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
             }
           }
         }
@@ -180,14 +304,33 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "max_steps": {"type": "integer", "minimum": 1},
-        "max_elapsed_minutes": {"type": "number", "exclusiveMinimum": 0},
-        "max_retries": {"type": "integer", "minimum": 0},
-        "max_cost_usd": {"type": "number", "minimum": 0},
+        "max_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_elapsed_minutes": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_retries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_cost_usd": {
+          "type": "number",
+          "minimum": 0
+        },
         "required_dimensions": {
           "type": "array",
           "uniqueItems": true,
-          "items": {"enum": ["max_steps", "max_elapsed_minutes", "max_retries", "max_cost_usd"]}
+          "items": {
+            "enum": [
+              "max_steps",
+              "max_elapsed_minutes",
+              "max_retries",
+              "max_cost_usd"
+            ]
+          }
         }
       }
     },
@@ -196,13 +339,35 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "effect", "reason", "restrictions"],
+        "required": [
+          "id",
+          "effect",
+          "reason",
+          "restrictions"
+        ],
         "properties": {
-          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
-          "effect": {"const": "restrict"},
-          "reason": {"type": "string", "minLength": 1},
-          "issue": {"type": "string", "minLength": 1},
-          "expires_on": {"type": ["string", "null"], "format": "date"},
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          },
+          "effect": {
+            "const": "restrict"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "issue": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expires_on": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
           "restrictions": {
             "type": "object",
             "additionalProperties": false,
@@ -212,29 +377,48 @@
                 "type": "array",
                 "minItems": 1,
                 "uniqueItems": true,
-                "items": {"$ref": "#/$defs/repositoryPathPattern"}
+                "items": {
+                  "$ref": "#/$defs/repositoryPathPattern"
+                }
               },
               "require_human_approval_for": {
                 "type": "array",
                 "minItems": 1,
                 "uniqueItems": true,
-                "items": {"type": "string", "minLength": 1}
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
               },
               "remove_capabilities": {
                 "type": "array",
                 "minItems": 1,
                 "uniqueItems": true,
-                "items": {"$ref": "#/$defs/capabilityId"}
+                "items": {
+                  "$ref": "#/$defs/capabilityId"
+                }
               },
               "lower_budgets": {
                 "type": "object",
                 "additionalProperties": false,
                 "minProperties": 1,
                 "properties": {
-                  "max_steps": {"type": "integer", "minimum": 1},
-                  "max_elapsed_minutes": {"type": "number", "exclusiveMinimum": 0},
-                  "max_retries": {"type": "integer", "minimum": 0},
-                  "max_cost_usd": {"type": "number", "minimum": 0}
+                  "max_steps": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "max_elapsed_minutes": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "max_retries": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "max_cost_usd": {
+                    "type": "number",
+                    "minimum": 0
+                  }
                 }
               }
             }
@@ -247,24 +431,58 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "target", "reason", "approval_reference"],
+        "required": [
+          "id",
+          "target",
+          "reason",
+          "approval_reference"
+        ],
         "properties": {
-          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
-          "target": {"type": "string", "minLength": 1},
-          "reason": {"type": "string", "minLength": 1},
-          "approval_reference": {"type": "string", "minLength": 1},
-          "expires_on": {"type": ["string", "null"], "format": "date"}
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approval_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expires_on": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
         }
       }
     },
     "compatibility": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["policy_schema", "profile_schema", "minimum_platform_version"],
+      "required": [
+        "policy_schema",
+        "profile_schema",
+        "minimum_platform_version"
+      ],
       "properties": {
-        "policy_schema": {"const": "engineering-policy/v1"},
-        "profile_schema": {"const": "repository-profile/v1"},
-        "minimum_platform_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}
+        "policy_schema": {
+          "const": "engineering-policy/v1"
+        },
+        "profile_schema": {
+          "const": "repository-profile/v1"
+        },
+        "minimum_platform_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        }
       }
     }
   },
@@ -285,20 +503,42 @@
     "capabilityList": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"$ref": "#/$defs/capabilityId"}
+      "items": {
+        "$ref": "#/$defs/capabilityId"
+      }
     },
     "permissionRule": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["tier", "risk", "actions"],
+      "required": [
+        "tier",
+        "risk",
+        "actions"
+      ],
       "properties": {
-        "tier": {"enum": ["autonomous", "bounded", "approval_required"]},
-        "risk": {"enum": ["low", "medium", "high", "critical"]},
+        "tier": {
+          "enum": [
+            "autonomous",
+            "bounded",
+            "approval_required"
+          ]
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
         "actions": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"type": "string", "pattern": "^[a-z][a-z0-9._-]*$"}
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]*$"
+          }
         }
       }
     },

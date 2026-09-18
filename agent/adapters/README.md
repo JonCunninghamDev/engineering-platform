@@ -38,3 +38,20 @@ Examples of possible adapters include a Codex/cloud workspace, a GitHub-hosted c
 The result must identify the adapter/provider execution, repository base/head commits, feature branch, commits, changed paths, actions, required validation evidence with exit status and duration, budget consumption, and consequential actions that were attempted and blocked.
 
 An adapter must not treat a natural-language claim such as "tests passed" as validation evidence. Passed checks require zero exit status plus a traceable evidence reference. Consumer policy remains authoritative over required checks, scopes, budgets, and human gates.
+
+
+## Repository-owned validation bindings
+
+A managed executor must not guess how a consumer implements a capability. Required validation stages may bind an exact repository-owned command in `engineering-policy.json`:
+
+```json
+{
+  "id": "node-completion",
+  "stage": "completion_gate",
+  "capability": "test.node",
+  "required": true,
+  "command": ["npm", "run", "check"]
+}
+```
+
+The execution envelope copies required bindings into `verification.pre_pr_commands`. Governed execution fails closed when a required stage lacks a command binding. This keeps capability semantics generic while making the consumer's executable contract deterministic.

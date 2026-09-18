@@ -65,6 +65,7 @@ def policy():
                     "stage": "completion_gate",
                     "capability": "test.node",
                     "required": True,
+                    "command": ["npm", "run", "check"],
                 }
             ]
         },
@@ -152,6 +153,15 @@ class GovernedExecutionTests(unittest.TestCase):
         )
         self.assertEqual(["CI / check"], envelope["verification"]["required_ci_checks"])
         self.assertEqual(["consumer-completion"], envelope["verification"]["pre_pr_checks"])
+        self.assertEqual(
+            [{
+                "id": "consumer-completion",
+                "stage": "completion_gate",
+                "capability": "test.node",
+                "command": ["npm", "run", "check"],
+            }],
+            envelope["verification"]["pre_pr_commands"],
+        )
         self.assertIn("visual_acceptance", envelope["human_gates"])
         self.assertFalse(envelope["delivery"]["release_write_allowed"])
 
@@ -163,6 +173,15 @@ class GovernedExecutionTests(unittest.TestCase):
         candidate["change_classes"] = ["credentials"]
         envelope = module.authorize_execution(policy(), candidate)
         self.assertEqual(["credentials", "visual_acceptance"], envelope["human_gates"])
+
+    def test_required_validation_stage_without_command_binding_is_not_authorized(self):
+        candidate_policy = policy()
+        del candidate_policy["validation"]["stages"][0]["command"]
+        envelope = module.authorize_execution(candidate_policy, request())
+        self.assertFalse(envelope["authorization"]["allowed"])
+        self.assertTrue(
+            any("command bindings" in reason for reason in envelope["authorization"]["reasons"])
+        )
 
     def test_rejects_direct_release_or_wrong_branch_route(self):
         candidate = request()

@@ -113,6 +113,34 @@ class EngineeringPolicyTests(unittest.TestCase):
                             profiles_dir=PROFILES,
                         )
 
+    def test_validation_stage_can_bind_repository_owned_command(self) -> None:
+        policy = json.loads((EXAMPLES / "node-python-policy.json").read_text(encoding="utf-8"))
+        policy["validation"]["stages"][0]["command"] = ["python", "-m", "unittest"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "policy.json"
+            path.write_text(json.dumps(policy), encoding="utf-8")
+            summary = module.validate_policy(
+                path,
+                policy_schema_path=SCHEMA,
+                profile_schema_path=PROFILE_SCHEMA,
+                profiles_dir=PROFILES,
+            )
+        self.assertEqual("v1.0.0", summary["platform_version"])
+
+    def test_validation_command_must_be_non_empty_when_present(self) -> None:
+        policy = json.loads((EXAMPLES / "node-python-policy.json").read_text(encoding="utf-8"))
+        policy["validation"]["stages"][0]["command"] = []
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "policy.json"
+            path.write_text(json.dumps(policy), encoding="utf-8")
+            with self.assertRaisesRegex(module.PolicyValidationError, "policy schema validation failed"):
+                module.validate_policy(
+                    path,
+                    policy_schema_path=SCHEMA,
+                    profile_schema_path=PROFILE_SCHEMA,
+                    profiles_dir=PROFILES,
+                )
+
     def test_schema_rejects_permission_broadening(self) -> None:
         policy = json.loads((EXAMPLES / "node-python-policy.json").read_text(encoding="utf-8"))
         policy["permissions"]["consequential_write"]["tier"] = "autonomous"

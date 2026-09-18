@@ -177,6 +177,7 @@
       "additionalProperties": false,
       "required": [
         "pre_pr_checks",
+        "pre_pr_commands",
         "required_ci_checks"
       ],
       "properties": {
@@ -191,6 +192,44 @@
           "minItems": 1,
           "items": {
             "type": "string"
+          }
+        },
+        "pre_pr_commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "stage",
+              "capability",
+              "command"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "stage": {
+                "enum": [
+                  "after_write",
+                  "pre_commit",
+                  "completion_gate"
+                ]
+              },
+              "capability": {
+                "type": "string",
+                "minLength": 1
+              },
+              "command": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
           }
         }
       }
