@@ -143,6 +143,9 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
     requested_human_gates = _string_list(
         request.get("human_gates", []), "request.human_gates"
     )
+    change_classes = _string_list(
+        request.get("change_classes", []), "request.change_classes"
+    )
 
     branches = policy["branches"]
     integration = branches["integration"]
@@ -171,8 +174,14 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
     policy_protected = _string_list(policy.get("protected_paths", []), "policy.protected_paths")
     effective_protected = list(dict.fromkeys(policy_protected + request_protected))
     required_ci_checks = _string_list(policy["review"]["required_checks"], "policy.review.required_checks", allow_empty=False)
-    policy_gates = _string_list(policy["review"].get("human_approval_for", []), "policy.review.human_approval_for")
-    human_gates = list(dict.fromkeys(policy_gates + requested_human_gates))
+    policy_gate_classes = _string_list(
+        policy["review"].get("human_approval_for", []),
+        "policy.review.human_approval_for",
+    )
+    applicable_policy_gates = [
+        gate for gate in policy_gate_classes if gate in set(change_classes)
+    ]
+    human_gates = list(dict.fromkeys(applicable_policy_gates + requested_human_gates))
 
     authorization = {
         "allowed": not reasons,
