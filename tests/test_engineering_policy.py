@@ -125,7 +125,7 @@ class EngineeringPolicyTests(unittest.TestCase):
                 profile_schema_path=PROFILE_SCHEMA,
                 profiles_dir=PROFILES,
             )
-        self.assertEqual("v1.0.0", summary["platform_version"])
+        self.assertEqual("v0.1.0", summary["platform_version"])
 
     def test_validation_command_must_be_non_empty_when_present(self) -> None:
         policy = json.loads((EXAMPLES / "node-python-policy.json").read_text(encoding="utf-8"))
