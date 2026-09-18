@@ -114,27 +114,31 @@ def _validate_policy(policy: dict[str, Any]) -> None:
     _string_list(policy.get("protected_paths", []), "policy.protected_paths")
 
 
-def _request_parts(request: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+def _request_parts(
+    request: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
     if request.get("schema_version") != REQUEST_SCHEMA:
         raise GovernedExecutionError(f"request schema_version must be {REQUEST_SCHEMA}")
     repository = request.get("repository")
     task = request.get("task")
     worker = request.get("worker")
+    executor = request.get("executor")
     scope = request.get("scope")
     for label, value in (
         ("request.repository", repository),
         ("request.task", task),
         ("request.worker", worker),
+        ("request.executor", executor),
         ("request.scope", scope),
     ):
         if not isinstance(value, dict):
             raise GovernedExecutionError(f"{label} must be an object")
-    return repository, task, worker, scope
+    return repository, task, worker, executor, scope
 
 
 def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict[str, Any]:
     _validate_policy(policy)
-    repository, task, worker, scope = _request_parts(request)
+    repository, task, worker, executor, scope = _request_parts(request)
 
     run_id = _string(request.get("run_id"), "request.run_id")
     repository_id = _string(repository.get("identifier"), "request.repository.identifier")
@@ -145,8 +149,10 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
     issue = _string(task.get("issue"), "request.task.issue")
     goal = _string(task.get("goal"), "request.task.goal")
     task_class = _string(task.get("task_class"), "request.task.task_class")
-    adapter = _string(worker.get("adapter"), "request.worker.adapter")
-    provider = _string(worker.get("provider"), "request.worker.provider")
+    worker_adapter = _string(worker.get("adapter"), "request.worker.adapter")
+    worker_provider = _string(worker.get("provider"), "request.worker.provider")
+    executor_adapter = _string(executor.get("adapter"), "request.executor.adapter")
+    executor_provider = _string(executor.get("provider"), "request.executor.provider")
     requested_actions = _string_list(
         request.get("requested_actions"), "request.requested_actions", allow_empty=False
     )
@@ -270,8 +276,12 @@ def authorize_execution(policy: dict[str, Any], request: dict[str, Any]) -> dict
             "task_class": task_class,
         },
         "worker": {
-            "adapter": adapter,
-            "provider": provider,
+            "adapter": worker_adapter,
+            "provider": worker_provider,
+        },
+        "executor": {
+            "adapter": executor_adapter,
+            "provider": executor_provider,
         },
         "authorization": authorization,
         "scope": {
@@ -330,10 +340,10 @@ def verify_worker_result(envelope: dict[str, Any], result: dict[str, Any]) -> di
     provider = _string(executor.get("provider"), "worker_result.executor.provider")
     execution_id = _string(executor.get("execution_id"), "worker_result.executor.execution_id")
     violations: list[str] = []
-    if adapter != envelope["worker"]["adapter"]:
-        violations.append("executor adapter does not match authorized worker adapter")
-    if provider != envelope["worker"]["provider"]:
-        violations.append("executor provider does not match authorized worker provider")
+    if adapter != envelope["executor"]["adapter"]:
+        violations.append("executor adapter does not match authorized executor adapter")
+    if provider != envelope["executor"]["provider"]:
+        violations.append("executor provider does not match authorized executor provider")
 
     repository_id = _string(repository.get("identifier"), "worker_result.repository.identifier")
     base_commit = _commit_sha(repository.get("base_commit"), "worker_result.repository.base_commit")

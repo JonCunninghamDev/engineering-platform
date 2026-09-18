@@ -55,3 +55,12 @@ A managed executor must not guess how a consumer implements a capability. Requir
 ```
 
 The execution envelope copies required bindings into `verification.pre_pr_commands`. Governed execution fails closed when a required stage lacks a command binding. This keeps capability semantics generic while making the consumer's executable contract deterministic.
+
+
+## Worker and executor are separate identities
+
+The worker produces or proposes the engineering change. The executor supplies an isolated environment and validation evidence. They may be different providers.
+
+For example, a Codex worker can produce a feature branch while GitHub Actions validates that exact branch in a clean runner. The execution envelope records both identities independently, and worker execution evidence is checked against `envelope.executor`, not `envelope.worker`.
+
+This separation is intentional: provider choice for code generation must not force the organization to use the same vendor for execution, CI, or merge control.
