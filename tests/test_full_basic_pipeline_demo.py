@@ -19,6 +19,12 @@ def test_full_basic_pipeline_is_deterministic_and_zero_execution(tmp_path):
     assert summary["boundaries"]["orchestrator_dispatches"] == 0
     assert json.loads((out / "verification-report.json").read_text())["status"] == "verified"
     assert json.loads((out / "change-set.json").read_text())["summary"]["actual_write_count"] == 0
+    run = json.loads((out / "engineering-run.json").read_text())
+    assert run["schema_version"] == "engineering-run/v1"
+    assert run["safety"]["safe"] is True
+    assert run["reliability"]["first_pass_verification"] is True
+    assert run["derived_metrics"]["intent_to_verified_ms"] == 6000
+    assert run["autonomy"]["human_interventions"] == 1
 
 
 def test_full_basic_pipeline_fails_closed_on_corrupted_handoff(tmp_path):
