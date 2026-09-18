@@ -90,6 +90,7 @@ def request():
             "task_class": "feature",
         },
         "worker": {"adapter": "chatgpt-codex", "provider": "openai"},
+        "executor": {"adapter": "github-actions", "provider": "github"},
         "requested_actions": ["repository.read", "branch.write", "code.write", "test.write", "pr.create", "merge.integration"],
         "scope": {
             "allowed_paths": ["src/", "server/", "tests/", "ai/specs/"],
@@ -106,8 +107,8 @@ def result():
         "schema_version": "worker-execution-result/v1",
         "run_id": "world-vibes-31-001",
         "executor": {
-            "adapter": "chatgpt-codex",
-            "provider": "openai",
+            "adapter": "github-actions",
+            "provider": "github",
             "execution_id": "executor-run-001",
         },
         "repository": {
@@ -150,6 +151,14 @@ class GovernedExecutionTests(unittest.TestCase):
         self.assertEqual(
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             envelope["repository"]["base_commit"],
+        )
+        self.assertEqual(
+            {"adapter": "chatgpt-codex", "provider": "openai"},
+            envelope["worker"],
+        )
+        self.assertEqual(
+            {"adapter": "github-actions", "provider": "github"},
+            envelope["executor"],
         )
         self.assertEqual(["CI / check"], envelope["verification"]["required_ci_checks"])
         self.assertEqual(["consumer-completion"], envelope["verification"]["pre_pr_checks"])
@@ -272,6 +281,12 @@ class GovernedExecutionTests(unittest.TestCase):
         duplicate["verification"].append(dict(duplicate["verification"][0]))
         with self.assertRaisesRegex(module.GovernedExecutionError, "duplicate worker verification check"):
             module.verify_worker_result(envelope, duplicate)
+
+    def test_worker_and_executor_are_independent_identities(self):
+        envelope = module.authorize_execution(policy(), request())
+        self.assertNotEqual(envelope["worker"], envelope["executor"])
+        verification = module.verify_worker_result(envelope, result())
+        self.assertEqual("verified", verification["status"])
 
     def test_worker_result_must_match_executor_and_base_commit(self):
         envelope = module.authorize_execution(policy(), request())
