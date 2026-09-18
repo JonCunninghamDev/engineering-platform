@@ -12,7 +12,8 @@ Versioned machine-readable contracts belong here.
 - `execution-plan-v1.schema.json` defines the Basic Orchestrator plan, selected/skipped capabilities, dependency-aware ordering, zero-dispatch evidence, and downstream handoff.
 - `builder-task-v1.schema.json` defines an explicit Builder assignment linked to a selected execution-plan capability, including allowed/protected path scope and bounded create/update candidate contents.
 - `change-set-v1.schema.json` defines the Basic Builder output, deterministic diff/hash evidence, zero-write summary, and handoff to the Verifier.
-- `agent-run-report-v1.schema.json` defines the machine-readable evidence record used by demo tooling and the future Human Lead Console.
+- `agent-run-report-v1.schema.json` defines per-agent decision and handoff evidence used by demo tooling and the future Human Lead Console.
+- `engineering-run-v1.schema.json` defines the cross-agent engineering intent ledger used to prove safety, reliability, flow time, human intervention, efficiency, and downstream outcome without treating raw activity as productivity.
 - `engineering-policy-v1.schema.json` defines consumer platform pins, branch roles, profile/capability requirements, review/delivery gates, permission and risk tiers, protected paths, validation stages, restrictive overrides, explicit exceptions, optional execution budgets, and compatibility metadata.
 - `repository-profile-v1.schema.json` defines reusable capability primitives and profile compositions consumed by `engineering-policy/v1`.
 - `platform-compatibility-v1.schema.json` defines the public-surface inventory, pre-1.0/stable versioning rules, workflow/profile compatibility metadata, and machine-readable deprecation lifecycle.

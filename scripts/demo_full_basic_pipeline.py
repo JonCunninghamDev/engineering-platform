@@ -8,6 +8,7 @@ from pathlib import Path
 
 import builder_agent
 import context_agent
+import engineering_run
 import orchestrator_agent
 import verifier_agent
 
@@ -73,6 +74,56 @@ def run(output_dir: Path, *, corrupt_handoff: bool = False) -> dict:
     if verification["status"] != "verified":
         raise ValueError("Verifier rejected the Builder evidence")
 
+    run_record = engineering_run.build_engineering_run(
+        run_id="engineering-demo-001",
+        created_at=CREATED_AT,
+        task={
+            "goal": plan["goal"],
+            "workflow": plan["workflow"],
+            "source": {"kind": "fixture", "reference": "full-basic-pipeline"},
+            "acceptance_criteria": ["Builder proposal independently verifies"],
+        },
+        dimensions={
+            "repository": "fixture-consumer",
+            "task_class": "feature",
+            "worker": "basic-builder",
+            "service_tier": "basic",
+            "autonomy": "advisory",
+            "mode": "demo",
+        },
+        events=[
+            {"name": "intent_received", "at": CREATED_AT, "actor": "human"},
+            {"name": "context_ready", "at": "2026-01-01T00:00:01+00:00", "evidence": "context.json"},
+            {"name": "plan_ready", "at": "2026-01-01T00:00:02+00:00", "evidence": "execution-plan.json"},
+            {"name": "builder_assigned", "at": "2026-01-01T00:00:03+00:00", "actor": "human"},
+            {"name": "first_change", "at": "2026-01-01T00:00:04+00:00", "evidence": "change-set.json"},
+            {"name": "verification_started", "at": "2026-01-01T00:00:05+00:00", "actor": "verifier"},
+            {"name": "verification_passed", "at": "2026-01-01T00:00:06+00:00", "evidence": "verification-report.json"},
+        ],
+        reliability={
+            "first_pass_verification": True,
+            "eventual_verification": True,
+            "ci_passed": None,
+            "retries": 0,
+            "repair_loops": 0,
+            "acceptance_criteria_total": 1,
+            "acceptance_criteria_verified": 1,
+        },
+        autonomy={
+            "human_interventions": 1,
+            "human_minutes": None,
+            "escalations": 0,
+            "completed_within_granted_autonomy": True,
+        },
+        outcome={"status": "verified"},
+        evidence=[
+            {"kind": "context", "reference": "context.json"},
+            {"kind": "plan", "reference": "execution-plan.json"},
+            {"kind": "change-set", "reference": "change-set.json"},
+            {"kind": "verification", "reference": "verification-report.json"},
+        ],
+    )
+
     output_dir.mkdir(parents=True, exist_ok=True)
     artifacts = {
         "context.json": context,
@@ -83,6 +134,7 @@ def run(output_dir: Path, *, corrupt_handoff: bool = False) -> dict:
         "change-set.json": change_set,
         "builder-run.json": builder_report,
         "verification-report.json": verification,
+        "engineering-run.json": run_record,
     }
     for name, value in artifacts.items():
         write_json(output_dir / name, value)

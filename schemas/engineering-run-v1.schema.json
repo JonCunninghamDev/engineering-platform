@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://joncunningham.dev/schemas/engineering-run-v1.schema.json",
+  "title": "Engineering Run v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "created_at", "task", "dimensions", "lifecycle", "safety", "reliability", "autonomy", "efficiency", "outcome", "derived_metrics", "evidence"],
+  "properties": {
+    "schema_version": {"const": "engineering-run/v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "format": "date-time"},
+    "task": {
+      "type": "object",
+      "required": ["goal", "workflow"],
+      "properties": {
+        "goal": {"type": "string", "minLength": 1},
+        "workflow": {"type": "string", "minLength": 1},
+        "source": {"type": ["object", "null"]},
+        "acceptance_criteria": {"type": "array"}
+      }
+    },
+    "dimensions": {"type": "object"},
+    "lifecycle": {
+      "type": "object",
+      "required": ["events"],
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "at"],
+            "properties": {
+              "name": {"enum": ["intent_received", "context_ready", "plan_ready", "builder_assigned", "first_change", "verification_started", "verification_passed", "pr_created", "human_review_started", "human_approved", "merged", "deployed"]},
+              "at": {"type": "string", "format": "date-time"},
+              "actor": {"type": "string"},
+              "evidence": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "safety": {"type": "object"},
+    "reliability": {"type": "object"},
+    "autonomy": {"type": "object"},
+    "efficiency": {"type": "object"},
+    "outcome": {
+      "type": "object",
+      "required": ["status", "pr", "merge_commit", "deployment"],
+      "properties": {
+        "status": {"enum": ["planned", "proposed", "verified", "pr_open", "merged", "deployed", "blocked", "failed"]}
+      }
+    },
+    "derived_metrics": {"type": "object"},
+    "evidence": {"type": "array"}
+  }
+}
