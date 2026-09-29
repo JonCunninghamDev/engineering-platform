@@ -32,6 +32,22 @@ class EngineeringPolicyTests(unittest.TestCase):
             profiles_dir=PROFILES,
         )
 
+    def test_canonical_policies_pin_current_published_platform_release(self) -> None:
+        expected_version = "v1.0.0"
+        expected_commit = "b107c9306161b395cbcaffebb55e47850b999560"
+        expected_minimum = "1.0.0"
+        paths = [
+            ROOT / "engineering-policy.json",
+            EXAMPLES / "node-python-policy.json",
+            EXAMPLES / "node-python-blender-policy.json",
+        ]
+        for path in paths:
+            with self.subTest(path=path):
+                payload = json.loads(path.read_text(encoding="utf-8"))
+                self.assertEqual(expected_version, payload["platform"]["version"])
+                self.assertEqual(expected_commit, payload["platform"]["commit"])
+                self.assertEqual(expected_minimum, payload["compatibility"]["minimum_platform_version"])
+
     def test_node_python_example_resolves_independent_capabilities(self) -> None:
         summary = self.validate("node-python-policy.json")
         self.assertEqual(["node-python"], summary["profiles"])
@@ -125,7 +141,7 @@ class EngineeringPolicyTests(unittest.TestCase):
                 profile_schema_path=PROFILE_SCHEMA,
                 profiles_dir=PROFILES,
             )
-        self.assertEqual("v0.1.0", summary["platform_version"])
+        self.assertEqual("v1.0.0", summary["platform_version"])
 
     def test_validation_command_must_be_non_empty_when_present(self) -> None:
         policy = json.loads((EXAMPLES / "node-python-policy.json").read_text(encoding="utf-8"))
