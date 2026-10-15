@@ -26,14 +26,14 @@ At the beginning of every run, including scheduled or recurring runs:
 1. Verify repository access with a real repository operation.
 2. Read the repository's local steering entry point, normally `README.md` then `AGENTS.md`.
 3. Read the active platform manifest or pinned shared contract when the consumer uses one.
-4. Inspect open pull requests before selecting new work.
-5. Inspect CI, review comments, unresolved threads, and partially completed writes for active work.
+4. Inspect all open **including draft** pull requests, linked issues, and remote temporary branches before selecting new work.
+5. Inspect CI, review comments, unresolved threads, current branch heads, and partially completed writes for active work.
 6. Inspect the canonical task queue and determine the current task using the repository's deterministic selection rules.
 7. Confirm the intended base branch and route before writing.
 8. Re-read the active issue and relevant architecture or standards documents.
 9. State or record the selected task and next safe increment before implementation.
 
-An agent must not depend on an earlier conversation to know what to do next.
+An agent must not depend on an earlier conversation to know what to do next. Before creating or resuming a branch, opening a PR, or merging into integration, repeat the relevant live-state reconciliation immediately before the write. A stale, inaccessible, incomplete, or ambiguous GitHub snapshot is not permission to proceed. See [branch reconciliation](../docs/branch-reconciliation.md) for required evidence and fail-closed decisions.
 
 ## 3. Deterministic task selection
 
@@ -46,7 +46,7 @@ Unless a direct human instruction overrides the queue:
 5. Maintain at most two active implementation branches.
 6. Start a second issue only when the first is waiting exclusively on CI, review, human acceptance, or another non-interactive state and the work is independent.
 
-Do not create side work merely to remain busy. Record newly discovered work as a follow-up issue unless it is required to satisfy the current issue's acceptance criteria.
+Do not create side work merely to remain busy. Record newly discovered work as a follow-up issue unless it is required to satisfy the current issue's acceptance criteria. A new defect within an unfinished feature belongs on the existing issue branch unless the human explicitly separates the scope. An existing draft PR is active work and consumes one of the two branch slots.
 
 ## 4. Autonomous implementation authority
 
@@ -121,7 +121,7 @@ The consumer repository defines branch names, but the shared route semantics use
 
 Direct writes to protected shared branches are prohibited unless the repository explicitly defines a different safe route.
 
-Never force-push a shared branch.
+Never force-push a shared branch. When the integration branch advances, inspect dependencies and bring current integration history into a published/shared feature branch by normal merge (not force-rebase) when appropriate. A private, unpublished branch may rebase locally before being shared. Overlapping features must establish an explicit dependency/merge order before either merges; never assume a passing unrelated PR removes acceptance gates.
 
 ## 8. Pull request behavior
 
@@ -140,6 +140,12 @@ Each agent pull request should state:
 - known limitations and follow-up issues.
 
 Keep pull requests focused enough that a failed assumption can be reverted without unrelated loss.
+
+### Pre-create and pre-merge gates
+
+Before creating any temporary implementation branch or PR, reconcile the selected issue against **all** live open and draft PRs, existing remote temporary branches, and their CI/review state. Resume existing issue work rather than opening a competing branch or PR. A second implementation branch is permitted only when the first is waiting exclusively for non-interactive review/CI/acceptance, its work is independent, and the two-active-branch cap is not exceeded. Treat unknown PR linkage, overlapping files/outcomes, or missing remote state as a blocker to the conflicting operation, not a reason to start again.
+
+Immediately before merging an implementation PR into integration, refresh GitHub PR and branch heads, checks for the exact head SHA, unresolved reviews, other dependent PRs, and human acceptance requirements. A draft PR, pending/failed/stale check, unresolved conflict, missing policy permission, or unfulfilled human gate forbids merge. CI success alone grants no merge authority. Record the selected operation, verified evidence, dependency assessment, and decision in the issue/PR for resumable handoff. The [deterministic branch preflight helper](../docs/branch-reconciliation.md) evaluates caller-supplied evidence but is not itself a live GitHub adapter or an authorization grant.
 
 ## 9. Validation standard
 
