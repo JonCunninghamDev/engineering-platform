@@ -11,6 +11,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +29,12 @@ def evaluate(snapshot: Any) -> dict[str, str]:
         return deny("Fresh, complete GitHub snapshot has not been verified")
     if not isinstance(snapshot.get("observed_at"), str) or not snapshot["observed_at"].strip():
         return deny("Missing live snapshot observation timestamp")
+    try:
+        observed = datetime.fromisoformat(snapshot["observed_at"].replace("Z", "+00:00"))
+        if observed.tzinfo is None:
+            return deny("Snapshot observation timestamp must include a timezone")
+    except ValueError:
+        return deny("Invalid snapshot observation timestamp")
     refs = snapshot.get("refs")
     prs = snapshot.get("pull_requests")
     request = snapshot.get("request")
@@ -44,8 +51,6 @@ def evaluate(snapshot: Any) -> dict[str, str]:
         return deny("Valid operation and linked issue number are required")
     if not isinstance(branch, str) or not branch.startswith(TEMPORARY) or branch in ("main", "develop"):
         return deny("An issue-linked temporary branch is required")
-    if not re.search(r"(^|/)issue-" + str(issue) + r"(?:-|$)", branch):
-        return deny("Branch must identify the selected issue")
 
     for pr in prs:
         if not isinstance(pr, dict) or type(pr.get("number")) is not int:
@@ -79,6 +84,8 @@ def evaluate(snapshot: Any) -> dict[str, str]:
     if branch not in refs:
         return deny("Requested existing branch is absent from remote GitHub refs")
     if operation == "resume":
+        if not same_issue and request.get("branch_issue_verified") is not True:
+            return deny("Existing branch has no PR: verify its issue ownership before resuming")
         if same_issue and any(pr["head"] != branch for pr in same_issue):
             return deny("Issue has a different existing PR branch; reconcile before writing")
         return decision("ALLOW_RESUME", "Continue the existing issue branch/PR", branch=branch)
@@ -99,8 +106,10 @@ def evaluate(snapshot: Any) -> dict[str, str]:
         return deny("GitHub must confirm PR is mergeable without conflicts")
     if request.get("merge_authorized_by_policy") is not True:
         return deny("Repository policy does not explicitly authorize this merge")
-    if pr.get("human_gate") is not False and pr.get("human_accepted") is not True:
-        return deny("Required human acceptance or unresolved human-gate classification")
+    if type(pr.get("human_gate")) is not bool:
+        return deny("Human-gate classification must be explicit")
+    if pr["human_gate"] and pr.get("human_accepted") is not True:
+        return deny("Required human acceptance has not been recorded")
     if any(other.get("overlaps_requested") is not False for other in other_prs):
         return deny("Another open/draft PR overlaps or has unknown dependency")
     return decision("ALLOW_MERGE", "Exact-head checks, dependencies, and authority satisfied", branch=branch)
