@@ -92,6 +92,8 @@ class BranchPreflightTests(unittest.TestCase):
         item["refs"]["feature/issue-76-preflight"] = FEATURE
         self.assertEqual("BLOCK", self.decision(item))
         item["request"]["operation"] = "resume"
+        self.assertEqual("BLOCK", self.decision(item))
+        item["request"]["branch_issue_verified"] = True
         self.assertEqual("ALLOW_RESUME", self.decision(item))
 
     def test_second_independent_branch_only_while_first_waits(self):
@@ -130,10 +132,15 @@ class BranchPreflightTests(unittest.TestCase):
         item["request"]["independent_of_active_work"] = True
         self.assertEqual("BLOCK", self.decision(item))
 
-    def test_unlinked_branch_is_rejected(self):
+    def test_descriptive_feature_branch_is_allowed_with_verified_issue(self):
         item = snapshot()
-        item["request"]["branch"] = "feature/unrelated-work"
+        item["request"]["branch"] = "feature/studio-earth-engine"
+        self.assertEqual("ALLOW_CREATE", self.decision(item))
+        item["refs"]["feature/studio-earth-engine"] = FEATURE
+        item["request"]["operation"] = "resume"
         self.assertEqual("BLOCK", self.decision(item))
+        item["request"]["branch_issue_verified"] = True
+        self.assertEqual("ALLOW_RESUME", self.decision(item))
 
     def test_green_exact_head_approved_pr_may_merge(self):
         self.assertEqual("ALLOW_MERGE", self.decision(merge_ready()))
@@ -156,6 +163,16 @@ class BranchPreflightTests(unittest.TestCase):
                 self.assertEqual("BLOCK", self.decision(item))
         item = merge_ready()
         item["pull_requests"][0]["head_sha"] = OTHER
+        self.assertEqual("BLOCK", self.decision(item))
+
+    def test_unknown_human_gate_fails_closed(self):
+        item = merge_ready()
+        del item["pull_requests"][0]["human_gate"]
+        self.assertEqual("BLOCK", self.decision(item))
+
+    def test_malformed_observation_timestamp_blocks(self):
+        item = snapshot()
+        item["observed_at"] = "yesterday"
         self.assertEqual("BLOCK", self.decision(item))
 
     def test_overlap_blocks_merge_even_with_green_ci(self):
