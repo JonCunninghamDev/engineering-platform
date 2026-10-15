@@ -91,12 +91,18 @@ def evaluate(snapshot: Any) -> dict[str, str]:
         return decision("ALLOW_RESUME", "Continue the existing issue branch/PR", branch=branch)
 
     # Re-read GitHub immediately before merge and provide exact-head CI/review evidence.
+    if len(same_issue) != 1:
+        return deny("Exactly one open PR for this issue is required before merging")
     matching = [pr for pr in same_issue if pr["head"] == branch and pr.get("base") == "develop"]
     if len(matching) != 1:
         return deny("Exactly one open PR for this issue/branch targeting develop is required")
     pr = matching[0]
+    if request.get("pr_number") != pr["number"]:
+        return deny("The PR being merged must match the explicitly selected PR number")
     if pr["draft"]:
         return deny("Draft PR is not mergeable")
+    if pr.get("base_sha") != refs["develop"] or request.get("checked_base_sha") != refs["develop"]:
+        return deny("Integration head changed or verified base SHA is missing; rerun validation")
     head_sha = refs[branch]
     if pr.get("head_sha") != head_sha or request.get("checked_head_sha") != head_sha:
         return deny("Live branch head, PR head, and checked CI commit must match")
