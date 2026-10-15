@@ -51,12 +51,13 @@ def merge_ready():
     item["pull_requests"] = [{
         "number": 77, "state": "open", "draft": False,
         "head": "feature/issue-76-preflight", "base": "develop",
-        "issue": 76, "head_sha": FEATURE, "checks": "success",
+        "base_sha": DEVELOP, "issue": 76, "head_sha": FEATURE, "checks": "success",
         "unresolved_threads": 0, "mergeable": True,
         "human_gate": True, "human_accepted": True,
     }]
     item["request"].update({
-        "checked_head_sha": FEATURE, "merge_authorized_by_policy": True,
+        "checked_head_sha": FEATURE, "checked_base_sha": DEVELOP,
+        "pr_number": 77, "merge_authorized_by_policy": True,
     })
     return item
 
@@ -163,6 +164,34 @@ class BranchPreflightTests(unittest.TestCase):
                 self.assertEqual("BLOCK", self.decision(item))
         item = merge_ready()
         item["pull_requests"][0]["head_sha"] = OTHER
+        self.assertEqual("BLOCK", self.decision(item))
+
+    def test_mismatched_or_missing_integration_base_sha_blocks_merge(self):
+        for target, key, value in (
+            ("request", "checked_base_sha", OTHER),
+            ("request", "checked_base_sha", None),
+            ("pull_requests", "base_sha", OTHER),
+            ("pull_requests", "base_sha", None),
+            ("refs", "develop", OTHER),
+        ):
+            with self.subTest(target=target, key=key, value=value):
+                item = merge_ready()
+                if target == "request":
+                    item["request"][key] = value
+                elif target == "pull_requests":
+                    item["pull_requests"][0][key] = value
+                else:
+                    item["refs"][key] = value
+                self.assertEqual("BLOCK", self.decision(item))
+
+    def test_duplicate_same_issue_prs_or_wrong_pr_number_block_merge(self):
+        item = merge_ready()
+        item["pull_requests"].append(dict(item["pull_requests"][0], number=79))
+        self.assertEqual("BLOCK", self.decision(item))
+        item = merge_ready()
+        item["request"]["pr_number"] = 79
+        self.assertEqual("BLOCK", self.decision(item))
+        item["request"].pop("pr_number")
         self.assertEqual("BLOCK", self.decision(item))
 
     def test_unknown_human_gate_fails_closed(self):
