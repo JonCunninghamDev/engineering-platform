@@ -40,6 +40,22 @@ Each issue includes outcome, scope, acceptance criteria, dependencies, and imple
 
 Do not create side work merely to remain busy. Record newly discovered work as a follow-up issue unless it is required to satisfy the current issue's acceptance criteria.
 
+## Repository-state reconciliation (mandatory)
+
+Before selecting new work, creating a branch/PR, and immediately before merging, inspect **all** open and draft PRs, corresponding issues and remote temporary branches, CI checks on current heads, unresolved review threads, and current integration state. Record the decision so interrupted runs can resume safely. See [branch reconciliation](branch-reconciliation.md).
+
+| Observed state | Required decision |
+| --- | --- |
+| Existing branch or open/draft PR covers the requested issue/defect | Resume that branch/PR; do not create a duplicate |
+| Feature defect discovered before acceptance | Repair on the existing feature branch and issue unless the human separates scope |
+| One task waits only for CI/review/acceptance; second task is demonstrably independent | A second branch may start while the two-active-branch cap permits |
+| Two active temporary branches, unknown ownership, or unknown PR/dependency overlap | Do not create a third or competing branch; reconcile first |
+| Other PR merged into integration while a feature remains open | Reinspect dependencies; normally merge updated integration into the published shared feature branch without force-push |
+| Two changes overlap or depend on each other | Establish and record an upstream-first review/merge order; do not merge independently |
+| PR is draft, exact-head checks are not green, reviews/acceptance unresolved, or merge authority uncertain | Do not merge into integration; recover or obtain the required human decision |
+
+Re-check live state immediately before consequential writes; a prior green check or remembered branch status is insufficient. The deterministic helper `scripts/branch_preflight.py` consumes an adapter-verified snapshot and denies incomplete input, but it does not independently fetch GitHub state or replace repository-specific policy/acceptance.
+
 ## Recurring autonomous runs
 
 Scheduled or repeatedly invoked agents use the same task queue; they do not maintain a separate automation backlog.
@@ -104,7 +120,7 @@ Promote `develop` to `main` through a reviewed pull request. Every promotion req
 - Use one issue per PR unless an issue explicitly defines grouped migration work.
 - Draft PRs are preferred until checks and evidence are complete.
 - Every PR states compatibility impact, affected consumers, automated validation, human acceptance-test status, and rollback.
-- Green, low-risk PRs into `develop` may merge autonomously when no human gate applies.
+- Green, low-risk PRs into `develop` may merge autonomously only when live exact-head checks and dependency review are current, repository policy explicitly grants authority, and no human gate applies.
 - Shared authority, schemas, workflows, consequential changes, and releases require human approval.
 
 ## Blockers
