@@ -68,8 +68,9 @@ def gh_json(arguments: list[str]) -> list[Any]:
     return values
 
 
-def github_preflight(envelope: dict[str, Any], expected_head: str) -> dict[str, Any]:
-    """Fresh resume-only reconciliation; does not perform any GitHub writes."""
+def github_snapshot(envelope: dict[str, Any], *, reader: Callable | None = None) -> dict[str, Any]:
+    """Collect complete live evidence; collection itself grants no authority."""
+    read = reader or gh_json
     repo = envelope['repository']
     identifier = repo['identifier']
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', identifier):
@@ -81,12 +82,12 @@ def github_preflight(envelope: dict[str, Any], expected_head: str) -> dict[str, 
         raise ExecutionLoopError('This GitHub adapter supports main/develop; supply a compatible adapter for other branch names')
 
     def pages(endpoint: str) -> list[dict[str, Any]]:
-        values = gh_json(['api', '--paginate', f'repos/{identifier}/{endpoint}'])
+        values = read(['api', '--paginate', f'repos/{identifier}/{endpoint}'])
         if not all(isinstance(value, list) for value in values):
             raise ExecutionLoopError('Incomplete GitHub list response')
         return [item for value in values for item in value]
 
-    issue = gh_json(['api', f'repos/{identifier}/issues/{issue_match.group(1)}'])[0]
+    issue = read(['api', f'repos/{identifier}/issues/{issue_match.group(1)}'])[0]
     if issue.get('state') != 'open' or 'pull_request' in issue:
         raise ExecutionLoopError('The assigned issue is not an open task')
     refs = {item['name']: item['commit']['sha'] for item in pages('branches?per_page=100')}
@@ -98,13 +99,13 @@ def github_preflight(envelope: dict[str, Any], expected_head: str) -> dict[str, 
         links = set(re.findall(r'(?im)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|progress(?:e[sd])?)\s+#([0-9]+)\b', pr.get('body') or ''))
         if len(links) != 1:
             raise ExecutionLoopError(f'PR #{pr["number"]} issue linkage is ambiguous')
-        checks = gh_json(['pr', 'view', str(pr['number']), '--repo', identifier, '--json',
+        checks = read(['pr', 'view', str(pr['number']), '--repo', identifier, '--json',
                           'headRefOid,statusCheckRollup,reviewDecision,mergeable'])[0]
         if checks['headRefOid'] != pr['head']['sha']:
             raise ExecutionLoopError('PR head changed during reconciliation')
         owner, name = identifier.split('/')
-        query = 'query($owner:String!,$name:String!,$number:Int!,$endCursor:String){repository(owner:$owner,name:$name){pullRequest(number:$number){headRefOid reviewThreads(first:100,after:$endCursor){nodes{isResolved} pageInfo{hasNextPage endCursor}}}}}'
-        thread_pages = gh_json(['api', 'graphql', '--paginate', '-f', 'query=' + query,
+        query = 'query($owner:String!,$name:String!,$number:Int!,$endCursor:String){repository(owner:$owner,name:$name){pullRequest(number:$number){headRefOid baseRefOid reviewThreads(first:100,after:$endCursor){nodes{isResolved} pageInfo{hasNextPage endCursor}}}}}'
+        thread_pages = read(['api', 'graphql', '--paginate', '-f', 'query=' + query,
                                '-f', 'owner=' + owner, '-f', 'name=' + name, '-F', 'number=' + str(pr['number'])])
         unresolved = 0
         for page in thread_pages:
@@ -118,14 +119,23 @@ def github_preflight(envelope: dict[str, Any], expected_head: str) -> dict[str, 
             raise ExecutionLoopError('Review-thread pagination is incomplete')
         pulls.append({'number': pr['number'], 'state': pr['state'], 'draft': pr['draft'],
                       'head': pr['head']['ref'], 'base': pr['base']['ref'], 'issue': int(next(iter(links))),
-                      'head_sha': pr['head']['sha'], 'base_sha': pr['base']['sha'], 'checks_evidence': checks,
-                      'unresolved_threads': unresolved})
+                      'head_sha': pr['head']['sha'], 'base_sha': details['baseRefOid'], 'checks_evidence': checks,
+                      'unresolved_threads': unresolved, 'node_id': pr['node_id'],
+                      'file_paths': [item['filename'] for item in pages(f'pulls/{pr["number"]}/files?per_page=100')]})
     final_refs = {item['name']: item['commit']['sha'] for item in pages('branches?per_page=100')}
-    if refs != final_refs or refs.get(repo['feature_branch']) != expected_head:
+    if refs != final_refs:
         raise ExecutionLoopError('Remote heads changed or differ from the assigned checkout')
     snapshot = {'verified': True, 'observed_at': datetime.now(timezone.utc).isoformat(), 'refs': refs,
                 'pull_requests': pulls, 'request': {'operation': 'resume', 'issue': int(issue_match.group(1)),
                                                   'branch': repo['feature_branch']}}
+    snapshot['issue_body_sha256'] = hashlib.sha256((issue.get('body') or '').encode()).hexdigest()
+    return snapshot
+
+
+def github_preflight(envelope: dict[str, Any], expected_head: str) -> dict[str, Any]:
+    snapshot = github_snapshot(envelope)
+    if snapshot['refs'].get(envelope['repository']['feature_branch']) != expected_head:
+        raise ExecutionLoopError('Remote head differs from the assigned checkout')
     decision = branch_preflight.evaluate(snapshot)
     if decision['decision'] != 'ALLOW_RESUME':
         raise ExecutionLoopError(decision['reason'])
@@ -239,7 +249,7 @@ def execute(policy: dict[str, Any], request: dict[str, Any], checkout: Path, sto
                         raise ExecutionLoopError('Remote heads moved since this evidence was collected')
                 return state
             raise ExecutionLoopError('Unknown or incomplete journal; inspect before resuming')
-        state: dict[str, Any] = {'created_at': datetime.now(timezone.utc).isoformat(), 'identity': identity, 'run_id': run_id, 'phase': 'authorized', 'events': [],
+        state: dict[str, Any] = {'created_at': datetime.now(timezone.utc).isoformat(), 'identity': identity, 'policy_sha256': fingerprint(policy), 'run_id': run_id, 'phase': 'authorized', 'events': [],
                                  'delivery': {'pr_creation_allowed': False, 'merge_allowed': False}}
 
         def save(phase: str, **data: Any) -> None:
